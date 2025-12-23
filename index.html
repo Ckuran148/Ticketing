@@ -227,11 +227,11 @@
 
             <!-- Status Quick Stats -->
             <section class="card">
-                <h2 class="text-lg font-bold mb-3 border-b pb-2 text-gray-700">Live Stats</h2>
+                <h2 class="text-lg font-bold mb-3 border-b pb-2 text-gray-700">Live Stats (Open)</h2>
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between">
-                        <span class="text-gray-500">Total:</span>
-                        <span id="stat-total" class="font-bold">0</span>
+                        <span class="text-gray-500">Total Open:</span>
+                        <span id="stat-total-open" class="font-bold">0</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-500">Wait for Tech:</span>
@@ -244,6 +244,10 @@
                     <div class="flex justify-between">
                         <span class="text-gray-500">Wait for Others:</span>
                         <span id="stat-other-turn" class="font-bold text-purple-600">0</span>
+                    </div>
+                    <div class="pt-2 border-t mt-2 flex justify-between">
+                        <span class="text-gray-400 text-xs">Total Managed (All):</span>
+                        <span id="stat-total-all" class="text-gray-400 text-xs font-bold">0</span>
                     </div>
                 </div>
             </section>
@@ -445,7 +449,7 @@
             const logData = {
                 id: idInput ? parseInt(idInput) : Date.now(),
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                date: todayStr, // Store explicit date for filtering
+                date: todayStr, 
                 site: site || "N/A",
                 ticketNum,
                 type,
@@ -467,14 +471,13 @@
             const viewDate = document.getElementById('log-view-date').value;
             if (!user || !confirm(`Clear all logs for ${viewDate}? This clears it for everyone!`)) return;
             
-            // Filter logs for this day only for deletion
             const logsToDelete = workLogs.filter(l => (l.date || '').includes(viewDate));
             const batch = writeBatch(db);
             logsToDelete.forEach(l => {
                 batch.delete(doc(logsRef, l.id.toString()));
             });
             await batch.commit();
-            showToast(`Logs for ${viewDate} cleared.`);
+            showToast(`Logs cleared.`);
         };
 
         // --- Manager Logic ---
@@ -568,7 +571,6 @@
 
         const syncTicketToLog = async (ticket, actionName) => {
             if (!user) return;
-            // When syncing from the manager, we use the specific ticket date or today
             const todayStr = new Date().toISOString().split('T')[0];
             const existing = workLogs.find(l => l.ticketNum === ticket.id && l.date === todayStr);
             const vendorInfo = ticket.vendor && ticket.vendor !== 'N/A' ? ` [Vendor: ${ticket.vendor}]` : '';
@@ -600,7 +602,6 @@
             const list = document.getElementById('activity-list');
             const viewDate = document.getElementById('log-view-date').value;
             
-            // Filter logs locally based on selected date
             const filteredLogs = workLogs.filter(l => (l.date || '').includes(viewDate));
 
             if (filteredLogs.length === 0) return list.innerHTML = `<p class="text-gray-400 italic text-center py-4">No activity logged for ${viewDate}.</p>`;
@@ -626,9 +627,16 @@
         window.renderImportedTickets = () => {
             const list = document.getElementById('imported-ticket-list');
 
-            const openTickets = importedTickets.filter(t => (t.status || '').toLowerCase() !== 'closed');
+            // --- Stats Logic ---
+            const allTickets = importedTickets;
+            const openTickets = allTickets.filter(t => (t.status || '').toLowerCase() !== 'closed');
             
-            document.getElementById('stat-total').innerText = importedTickets.length;
+            // Total Managed matches the full list
+            document.getElementById('stat-total-all').innerText = allTickets.length;
+            // Total Open represents active items
+            document.getElementById('stat-total-open').innerText = openTickets.length;
+            
+            // Breakdown of Open Tickets
             document.getElementById('stat-tech-turn').innerText = openTickets.filter(t => (t.turn || '').toLowerCase().includes('tech')).length;
             document.getElementById('stat-site-turn').innerText = openTickets.filter(t => (t.turn || '').toLowerCase().includes('site')).length;
             document.getElementById('stat-other-turn').innerText = openTickets.filter(t => {
@@ -751,7 +759,6 @@
             document.getElementById('site-id').value = log.site === "N/A" ? "" : log.site;
             document.getElementById('ticket-number').value = log.ticketNum || '';
             
-            // Check if it's a known activity or needs 'Other'
             const select = document.getElementById('ticket-type');
             let found = false;
             for(let i=0; i<select.options.length; i++) {
@@ -813,8 +820,13 @@
             const pending = filteredLogs.filter(l => !l.closed);
 
             const cleanDesc = (desc) => {
-                // Remove [Sync] Attempts: X. Turn: Y. Notes: prefix if it exists
-                return desc.replace(/^\[Sync\] Attempts: \d+\. Turn: .*?\. Notes: /i, '');
+                // Robust extraction: Split by 'Notes: ' and take the second half.
+                // If 'Notes: ' isn't found, it returns the original description.
+                if (desc.includes("Notes: ")) {
+                    return desc.split("Notes: ").slice(1).join("Notes: ");
+                }
+                // Strip the [Sync] tag if it exists but Notes doesn't
+                return desc.replace(/^\[Sync\].*?: /i, '');
             };
 
             let txt = `DAILY IT ACTIVITY SUMMARY - ${viewDate}\n`;
