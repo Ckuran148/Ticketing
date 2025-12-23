@@ -285,7 +285,7 @@
                 </div>
                 <div class="pt-2 border-t mt-2">
                     <div class="flex justify-between text-[10px] text-gray-400">
-                        <span>Grand Total (All):</span>
+                        <span>Current Open Total:</span>
                         <span id="stat-total-all" class="font-bold">0</span>
                     </div>
                 </div>
@@ -552,7 +552,6 @@
                 const allRows = rows.filter(r => r.trim());
                 if (allRows.length === 0) return showToast("CSV file appears to be empty.");
 
-                // Process in chunks to stay within writeBatch limits
                 for (let i = 0; i < allRows.length; i += batchSize) {
                     const batch = writeBatch(db);
                     const chunk = allRows.slice(i, i + batchSize);
@@ -560,7 +559,6 @@
                     chunk.forEach(row => {
                         const cols = parseCSVLine(row);
                         const isFullExport = cols.length >= 9;
-                        // Strip characters Firestore document IDs don't like
                         const rawId = cols[0] || 'T' + Date.now() + Math.random().toString(36).substr(2, 5);
                         const safeId = rawId.replace(/[\/\.\#\$\s]/g, '-');
                         
@@ -673,7 +671,6 @@
             const pendingList = document.getElementById('global-pending-list');
             const viewDate = document.getElementById('log-view-date').value;
             
-            // --- Unresolved Tasks (Across all dates) ---
             const globalPending = workLogs.filter(l => !l.closed);
             document.getElementById('pending-count-badge').innerText = globalPending.length;
 
@@ -691,7 +688,6 @@
                 `).join('');
             }
 
-            // --- Date Specific Logs ---
             const filteredLogs = workLogs.filter(l => (l.date || '').includes(viewDate));
 
             if (filteredLogs.length === 0) return list.innerHTML = `<p class="text-gray-400 italic text-center py-4">No activity logged for ${viewDate}.</p>`;
@@ -718,14 +714,16 @@
         window.renderImportedTickets = () => {
             const list = document.getElementById('imported-ticket-list');
 
-            // --- Robust Stats Logic ---
+            // --- Stats Logic ---
             const allTickets = importedTickets;
             const openTickets = allTickets.filter(t => (t.status || '').toLowerCase() !== 'closed');
             const closedTickets = allTickets.filter(t => (t.status || '').toLowerCase() === 'closed');
             
-            document.getElementById('stat-total-all').innerText = allTickets.length;
             document.getElementById('stat-total-open').innerText = openTickets.length;
             document.getElementById('stat-total-closed').innerText = closedTickets.length;
+            
+            // Grand Total at bottom now reflects only CURRENT OPEN tickets
+            document.getElementById('stat-total-all').innerText = openTickets.length;
             
             const closureRate = allTickets.length ? ((closedTickets.length / allTickets.length) * 100).toFixed(1) : 0;
             document.getElementById('stat-closure-percent').innerText = `${closureRate}%`;
@@ -735,22 +733,30 @@
                 const totalDiff = closedWithTime.reduce((acc, t) => {
                     const start = new Date(t.date);
                     const end = new Date(t.closedAt);
-                    return isNaN(start.getTime()) || isNaN(end.getTime()) ? acc : acc + (end - start);
+                    // Ensure valid dates before adding to accumulator
+                    const diff = end - start;
+                    return (isNaN(start.getTime()) || isNaN(end.getTime()) || diff < 0) ? acc : acc + diff;
                 }, 0);
-                const avgDays = (totalDiff / closedWithTime.length / (1000 * 60 * 60 * 24)).toFixed(1);
-                document.getElementById('stat-avg-time').innerText = isNaN(avgDays) ? 'N/A' : `${avgDays} Days`;
+                
+                const avgMs = totalDiff / closedWithTime.length;
+                const avgHours = avgMs / (1000 * 60 * 60);
+                
+                if (avgHours < 24) {
+                    document.getElementById('stat-avg-time').innerText = `${avgHours.toFixed(1)} Hours`;
+                } else {
+                    document.getElementById('stat-avg-time').innerText = `${(avgHours / 24).toFixed(1)} Days`;
+                }
             } else {
                 document.getElementById('stat-avg-time').innerText = 'N/A';
             }
             
-            // Refined Turn Counting
             const waitTechCount = openTickets.filter(t => (t.turn || '').toLowerCase().includes('tech')).length;
             const waitSiteCount = openTickets.filter(t => (t.turn || '').toLowerCase().includes('site')).length;
             const waitOtherCount = openTickets.length - (waitTechCount + waitSiteCount);
 
             document.getElementById('stat-tech-turn').innerText = waitTechCount;
             document.getElementById('stat-site-turn').innerText = waitSiteCount;
-            document.getElementById('stat-other-turn').innerText = waitOtherCount;
+            document.getElementById('stat-other-turn').innerText = Math.max(0, waitOtherCount);
 
             if (importedTickets.length === 0) return list.innerHTML = `<div class="text-center py-10 text-gray-400"><p>No shared tickets found.</p></div>`;
 
