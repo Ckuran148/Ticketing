@@ -61,11 +61,9 @@
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #d1d1d1; border-radius: 10px; }
         
-        /* Status Badge Colors */
         .status-badge-closed { background-color: #def7ec; color: #03543f; }
         .status-badge-pending { background-color: #fdf2f2; color: #9b1c1c; }
         
-        /* Dynamic Turn Colors */
         .turn-tech { background-color: #ebf5ff; color: #1e429f; }
         .turn-site { background-color: #fef3c7; color: #92400e; }
         .turn-vendor { background-color: #f3e8ff; color: #6b21a8; }
@@ -75,7 +73,7 @@
         .loading-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(255,255,255,0.9);
+            background: rgba(255,255,255,0.95);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -88,7 +86,10 @@
 
     <div id="loader" class="loading-overlay">
         <div class="text-wendys-red font-bold text-xl animate-pulse mb-2">Syncing Cloud Center...</div>
-        <div id="loader-error" class="text-xs text-gray-500 max-w-xs text-center px-4">Connecting to real-time database</div>
+        <div id="loader-error" class="text-xs text-gray-500 max-w-xs text-center px-4 italic">Connecting to Wendy's Team Database</div>
+        <div id="auth-retry-btn" class="hidden mt-4">
+            <button onclick="location.reload()" class="bg-gray-800 text-white px-4 py-2 rounded text-xs">Retry Connection</button>
+        </div>
     </div>
 
     <header class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -96,13 +97,12 @@
             <div class="w-12 h-12 bg-wendys-red rounded-full flex items-center justify-center text-white font-bold text-2xl">W</div>
             <div>
                 <h1 class="text-2xl font-bold text-gray-800">IT Technician Command Center</h1>
-                <p class="text-xs text-gray-500">Live Cloud Sync Enabled | Multiple User Support</p>
+                <p class="text-xs text-gray-500">Shared Cloud Session: <span id="display-app-id" class="font-bold text-wendys-blue">...</span></p>
             </div>
         </div>
         <div id="current-date" class="text-gray-500 font-medium italic text-right text-sm"></div>
     </header>
 
-    <!-- Navigation Tabs -->
     <nav class="max-w-7xl mx-auto flex gap-4 mb-6 border-b border-gray-200">
         <button onclick="switchTab('log')" id="tab-log" class="tab-btn active">Daily Work Log</button>
         <button onclick="switchTab('manager')" id="tab-manager" class="tab-btn">Ticket Manager (Imported)</button>
@@ -110,7 +110,6 @@
 
     <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
         
-        <!-- Tab Content: Daily Log -->
         <div id="content-log" class="lg:col-span-3 space-y-6">
             <section class="card border-t-4 border-wendys-red" id="log-form-section">
                 <h2 class="text-xl font-bold mb-4 flex items-center gap-2">📝 <span id="form-title">Log New Work / Activity</span></h2>
@@ -165,7 +164,6 @@
             </section>
         </div>
 
-        <!-- Tab Content: Ticket Manager (Imported) -->
         <div id="content-manager" class="lg:col-span-3 space-y-6 hidden">
             <section class="card border-t-4 border-wendys-blue">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -202,33 +200,19 @@
             </section>
         </div>
 
-        <!-- Right Column: Shared Tools -->
         <div class="space-y-6">
             <section class="card bg-gray-900 text-white">
                 <h2 class="text-xl font-bold mb-2 text-wendys-yellow">Daily Recap</h2>
                 <button onclick="generateRecap()" class="w-full bg-wendys-blue hover:bg-blue-600 text-white py-3 rounded-lg font-bold transition">📋 Generate Email</button>
             </section>
 
-            <!-- Status Quick Stats -->
             <section class="card">
-                <h2 class="text-lg font-bold mb-3 border-b pb-2 text-gray-700">Ticket Stats</h2>
+                <h2 class="text-lg font-bold mb-3 border-b pb-2 text-gray-700">Live Stats</h2>
                 <div class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Total:</span>
-                        <span id="stat-total" class="font-bold">0</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Wait for Tech:</span>
-                        <span id="stat-tech-turn" class="font-bold text-blue-600">0</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Wait for Site:</span>
-                        <span id="stat-site-turn" class="font-bold text-orange-600">0</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Wait for Others:</span>
-                        <span id="stat-other-turn" class="font-bold text-purple-600">0</span>
-                    </div>
+                    <div class="flex justify-between"><span class="text-gray-500">Total:</span><span id="stat-total" class="font-bold">0</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Wait for Tech:</span><span id="stat-tech-turn" class="font-bold text-blue-600">0</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Wait for Site:</span><span id="stat-site-turn" class="font-bold text-orange-600">0</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Wait for Others:</span><span id="stat-other-turn" class="font-bold text-purple-600">0</span></div>
                 </div>
             </section>
 
@@ -243,44 +227,29 @@
         </div>
     </main>
 
-    <!-- Modal for Ticket Notes -->
     <div id="notes-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl">
-            <h3 class="text-xl font-bold mb-4">Update Ticket Status/Notes</h3>
+            <h3 class="text-xl font-bold mb-4">Cloud Update</h3>
             <input type="hidden" id="note-ticket-id">
-            
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">WHOSE TURN?</label>
                     <input list="turn-options" id="note-turn" class="input-field mb-0" placeholder="Type or select...">
                     <datalist id="turn-options">
-                        <option value="Technician">
-                        <option value="Site">
-                        <option value="NCR/ Accenture">
-                        <option value="Viking Cloud">
-                        <option value="Mood">
-                        <option value="DM">
-                        <option value="Jolt">
-                        <option value="Other">
+                        <option value="Technician"><option value="Site"><option value="NCR/ Accenture"><option value="Viking Cloud"><option value="Mood"><option value="DM"><option value="Jolt"><option value="Other">
                     </datalist>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">SITE RESPONDED?</label>
-                    <select id="note-responded" class="input-field mb-0">
-                        <option value="false">No</option>
-                        <option value="true">Yes</option>
-                    </select>
+                    <select id="note-responded" class="input-field mb-0"><option value="false">No</option><option value="true">Yes</option></select>
                 </div>
             </div>
-
             <div class="mb-4">
                 <label class="block text-xs font-bold text-gray-500 mb-1">VENDOR:</label>
                 <input list="turn-options" id="note-vendor" class="input-field mb-0" placeholder="Specify Vendor...">
             </div>
-
             <label class="block text-xs font-bold text-gray-500 mb-1">TICKET NOTES:</label>
-            <textarea id="note-text" class="input-field h-32" placeholder="Enter status updates or site call notes..."></textarea>
-            
+            <textarea id="note-text" class="input-field h-32" placeholder="Notes sync automatically..."></textarea>
             <div class="flex gap-3">
                 <button onclick="saveNote()" class="flex-1 btn-primary">Sync to Cloud</button>
                 <button onclick="closeNotes()" class="btn-secondary">Cancel</button>
@@ -288,7 +257,6 @@
         </div>
     </div>
 
-    <!-- Recap Modal -->
     <div id="recap-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
@@ -318,22 +286,27 @@
           measurementId: "G-001RJV5E4X"
         };
 
-        // Determine which config to use (internal Canvas env or hardcoded keys)
+        // Determine config source
         let finalConfig;
-        if (typeof __firebase_config !== 'undefined') {
+        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
             finalConfig = JSON.parse(__firebase_config);
         } else {
             finalConfig = myFirebaseConfig;
         }
 
+        // Initialize Firebase
         const app = initializeApp(finalConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const sharedAppId = typeof __app_id !== 'undefined' ? __app_id : 'wendys-it-center-v1';
+        
+        // CRITICAL: Hardcode Team ID for consistency across all devices
+        // Change this if you want to create a separate room for testing
+        const teamAppId = 'wendys-it-team-shared-v1';
+        document.getElementById('display-app-id').innerText = teamAppId;
 
-        // Firestore collection references
-        const logsRef = collection(db, 'artifacts', sharedAppId, 'public', 'data', 'workLogs');
-        const ticketsRef = collection(db, 'artifacts', sharedAppId, 'public', 'data', 'importedTickets');
+        // Collection references
+        const logsRef = collection(db, 'artifacts', teamAppId, 'public', 'data', 'workLogs');
+        const ticketsRef = collection(db, 'artifacts', teamAppId, 'public', 'data', 'importedTickets');
 
         let workLogs = [];
         let importedTickets = [];
@@ -348,7 +321,7 @@
                 }
             } catch (err) {
                 console.error("Auth failed:", err);
-                document.getElementById('loader-error').innerHTML = `<span class="text-red-500">Connection Failed: Check Firebase Keys.</span>`;
+                showLoaderError("Authentication Failed: Check Firebase settings or connectivity.");
             }
         };
 
@@ -357,21 +330,26 @@
             if (user) {
                 setupListeners();
                 document.getElementById('loader').classList.add('hidden');
+                console.log("Cloud Connected as:", user.uid);
             }
         });
 
         const setupListeners = () => {
             if (!user) return;
 
+            // Work Logs Stream
             onSnapshot(logsRef, (snapshot) => {
                 workLogs = snapshot.docs.map(d => ({ ...d.data(), fireId: d.id }))
                     .sort((a, b) => b.id - a.id);
                 renderLogs();
             }, (err) => {
                 console.error("Logs sync error:", err);
-                if (err.code === 'permission-denied') showToast("Permissions Denied: Check Firestore Rules.");
+                if (err.code === 'permission-denied') {
+                    showLoaderError("Database Permission Denied: Ensure Firestore Rules allow read/write for Team ID path.");
+                }
             });
 
+            // Tickets Stream
             onSnapshot(ticketsRef, (snapshot) => {
                 importedTickets = snapshot.docs.map(d => ({ ...d.data(), fireId: d.id }));
                 renderImportedTickets();
@@ -380,9 +358,16 @@
             });
         };
 
+        function showLoaderError(msg) {
+            const errEl = document.getElementById('loader-error');
+            errEl.innerHTML = `<span class="text-red-500 font-bold">${msg}</span>`;
+            document.getElementById('auth-retry-btn').classList.remove('hidden');
+            document.getElementById('loader').classList.remove('hidden');
+        }
+
         // --- Log Logic ---
         window.logWork = async () => {
-            if (!user) return;
+            if (!user) return showToast("Not authenticated");
             const idInput = document.getElementById('editing-id').value;
             const site = document.getElementById('site-id').value;
             const ticketNum = document.getElementById('ticket-number').value;
@@ -402,9 +387,13 @@
                 closed
             };
 
-            await setDoc(doc(logsRef, logData.id.toString()), logData);
-            showToast("Synced to Cloud");
-            resetForm();
+            try {
+                await setDoc(doc(logsRef, logData.id.toString()), logData);
+                showToast("Synced to Cloud");
+                resetForm();
+            } catch (e) {
+                showToast("Cloud Sync Failed: Check Permissions");
+            }
         };
 
         window.deleteLog = async (id) => {
@@ -414,7 +403,7 @@
         };
 
         window.clearLogs = async () => {
-            if (!user || !confirm("Clear all logs for today?")) return;
+            if (!user || !confirm("Clear all logs for today? This affects the whole team!")) return;
             const snapshot = await getDocs(logsRef);
             const batch = writeBatch(db);
             snapshot.docs.forEach(d => batch.delete(d.ref));
@@ -422,7 +411,7 @@
             showToast("Logs Cleared");
         };
 
-        // --- Manager Logic ---
+        // --- Ticket Logic ---
         function parseCSVLine(line) {
             const result = [];
             let current = "";
@@ -469,8 +458,12 @@
                     batch.set(doc(ticketsRef, safeId), tData);
                 });
                 
-                await batch.commit();
-                showToast(`Sync Complete.`);
+                try {
+                    await batch.commit();
+                    showToast(`Import Success.`);
+                } catch (err) {
+                    showToast("Import failed: Check permissions.");
+                }
             };
             reader.readAsText(file);
         };
@@ -490,13 +483,15 @@
             const newAttempts = Math.max(0, t.attempts + delta);
             const safeId = id.replace(/[\/\.\#\$\s]/g, '-');
             await setDoc(doc(ticketsRef, safeId), { ...t, attempts: newAttempts }, { merge: true });
-            syncTicketToLog({ ...t, attempts: newAttempts }, "Attempt Tracking");
+            syncTicketToLog({ ...t, attempts: newAttempts }, "Attempt Tracker");
         };
 
         window.saveNote = async () => {
             if (!user) return;
             const id = document.getElementById('note-ticket-id').value;
             const t = importedTickets.find(x => x.id === id);
+            if (!t) return;
+
             const updated = {
                 ...t,
                 notes: document.getElementById('note-text').value,
@@ -506,7 +501,7 @@
             };
             const safeId = id.replace(/[\/\.\#\$\s]/g, '-');
             await setDoc(doc(ticketsRef, safeId), updated);
-            syncTicketToLog(updated, "Notes Updated");
+            syncTicketToLog(updated, "Status Updated");
             closeNotes();
         }
 
@@ -529,46 +524,18 @@
         };
 
         window.clearImportedTickets = async () => {
-            if (!user || !confirm("Delete all shared tickets?")) return;
+            if (!user || !confirm("Delete all shared tickets? This clears it for everyone!")) return;
             const snapshot = await getDocs(ticketsRef);
             const batch = writeBatch(db);
             snapshot.docs.forEach(d => batch.delete(d.ref));
             await batch.commit();
-            showToast("Manager Cleared");
+            showToast("Tickets Cleared");
         };
 
-        // --- Export Utils ---
-        window.exportTicketsCSV = () => {
-            if (importedTickets.length === 0) return showToast("Nothing to export");
-            let csv = "Ticket#,Site,Issue,Date,Vendor,Notes,Status,Attempts,SiteResponded,WhoseTurn\n";
-            importedTickets.forEach(t => {
-                csv += `"${t.id}","${t.site}","${(t.issue || '').replace(/"/g, '""')}","${t.date}","${(t.vendor || 'N/A').replace(/"/g, '""')}","${(t.notes || '').replace(/"/g, '""')}","${t.status}","${t.attempts}","${t.siteResponded}","${t.turn}"\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `it_cloud_export_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-        };
-
-        // UI Helpers
-        window.switchTab = (tab) => {
-            document.getElementById('content-log').classList.toggle('hidden', tab !== 'log');
-            document.getElementById('content-manager').classList.toggle('hidden', tab !== 'manager');
-            document.getElementById('tab-log').classList.toggle('active', tab === 'log');
-            document.getElementById('tab-manager').classList.toggle('active', tab === 'manager');
-        };
-
-        window.toggleSiteRequirement = () => {
-            const select = document.getElementById('ticket-type');
-            const group = select.options[select.selectedIndex].parentElement.id;
-            document.getElementById('site-req-star').classList.toggle('hidden', group === 'group-admin');
-        };
-
+        // --- UI Rendering ---
         window.renderLogs = () => {
             const list = document.getElementById('activity-list');
-            if (workLogs.length === 0) return list.innerHTML = `<p class="text-gray-400 italic text-center py-4">No activity synced yet.</p>`;
+            if (workLogs.length === 0) return list.innerHTML = `<p class="text-gray-400 italic text-center py-4">No activity in cloud yet.</p>`;
             list.innerHTML = workLogs.map(log => `
                 <div class="flex items-start gap-4 p-4 border rounded-lg bg-white group hover:border-wendys-blue transition">
                     <div class="w-2 h-2 mt-2 rounded-full ${log.closed ? 'bg-green-500' : 'bg-yellow-500'}"></div>
@@ -607,6 +574,7 @@
                 return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
             });
 
+            // Update Stats UI
             const open = importedTickets.filter(t => t.status !== 'closed');
             document.getElementById('stat-total').innerText = importedTickets.length;
             document.getElementById('stat-tech-turn').innerText = open.filter(t => (t.turn || '').toLowerCase().includes('tech')).length;
@@ -660,6 +628,34 @@
             if (t.includes('ncr') || t.includes('viking') || t.includes('mood') || t.includes('jolt') || t.includes('accenture')) return 'turn-vendor';
             return 'turn-other';
         }
+
+        // --- Helpers ---
+        window.exportTicketsCSV = () => {
+            if (importedTickets.length === 0) return showToast("Nothing to export");
+            let csv = "Ticket#,Site,Issue,Date,Vendor,Notes,Status,Attempts,SiteResponded,WhoseTurn\n";
+            importedTickets.forEach(t => {
+                csv += `"${t.id}","${t.site}","${(t.issue || '').replace(/"/g, '""')}","${t.date}","${(t.vendor || 'N/A').replace(/"/g, '""')}","${(t.notes || '').replace(/"/g, '""')}","${t.status}","${t.attempts}","${t.siteResponded}","${t.turn}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `it_cloud_export_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        };
+
+        window.switchTab = (tab) => {
+            document.getElementById('content-log').classList.toggle('hidden', tab !== 'log');
+            document.getElementById('content-manager').classList.toggle('hidden', tab !== 'manager');
+            document.getElementById('tab-log').classList.toggle('active', tab === 'log');
+            document.getElementById('tab-manager').classList.toggle('active', tab === 'manager');
+        };
+
+        window.toggleSiteRequirement = () => {
+            const select = document.getElementById('ticket-type');
+            const group = select.options[select.selectedIndex].parentElement.id;
+            document.getElementById('site-req-star').classList.toggle('hidden', group === 'group-admin');
+        };
 
         window.openNotes = (id) => {
             const t = importedTickets.find(x => x.id === id);
@@ -744,6 +740,7 @@
 
         function showToast(m) { 
             const t = document.getElementById('toast'); 
+            if (!t) return;
             t.innerText = m; 
             t.classList.remove('translate-y-20'); 
             setTimeout(() => t.classList.add('translate-y-20'), 3000); 
