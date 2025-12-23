@@ -61,9 +61,11 @@
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #d1d1d1; border-radius: 10px; }
         
+        /* Status Badge Colors */
         .status-badge-closed { background-color: #def7ec; color: #03543f; }
         .status-badge-pending { background-color: #fdf2f2; color: #9b1c1c; }
         
+        /* Dynamic Turn Colors */
         .turn-tech { background-color: #ebf5ff; color: #1e429f; }
         .turn-site { background-color: #fef3c7; color: #92400e; }
         .turn-vendor { background-color: #f3e8ff; color: #6b21a8; }
@@ -98,6 +100,7 @@
         <div id="current-date" class="text-gray-500 font-medium italic text-right text-sm"></div>
     </header>
 
+    <!-- Navigation Tabs -->
     <nav class="max-w-7xl mx-auto flex gap-4 mb-6 border-b border-gray-200">
         <button onclick="switchTab('log')" id="tab-log" class="tab-btn active">Daily Work Log</button>
         <button onclick="switchTab('manager')" id="tab-manager" class="tab-btn">Ticket Manager (Imported)</button>
@@ -105,6 +108,7 @@
 
     <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
         
+        <!-- Tab Content: Daily Log -->
         <div id="content-log" class="lg:col-span-3 space-y-6">
             <section class="card border-t-4 border-wendys-red" id="log-form-section">
                 <h2 class="text-xl font-bold mb-4 flex items-center gap-2">📝 <span id="form-title">Log New Work / Activity</span></h2>
@@ -159,6 +163,7 @@
             </section>
         </div>
 
+        <!-- Tab Content: Ticket Manager (Imported) -->
         <div id="content-manager" class="lg:col-span-3 space-y-6 hidden">
             <section class="card border-t-4 border-wendys-blue">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -195,19 +200,33 @@
             </section>
         </div>
 
+        <!-- Right Column: Shared Tools -->
         <div class="space-y-6">
             <section class="card bg-gray-900 text-white">
                 <h2 class="text-xl font-bold mb-2 text-wendys-yellow">Daily Recap</h2>
                 <button onclick="generateRecap()" class="w-full bg-wendys-blue hover:bg-blue-600 text-white py-3 rounded-lg font-bold transition">📋 Generate Email</button>
             </section>
 
+            <!-- Status Quick Stats -->
             <section class="card">
                 <h2 class="text-lg font-bold mb-3 border-b pb-2 text-gray-700">Live Stats</h2>
                 <div class="space-y-2 text-sm">
-                    <div class="flex justify-between"><span class="text-gray-500">Total:</span><span id="stat-total" class="font-bold">0</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Wait for Tech:</span><span id="stat-tech-turn" class="font-bold text-blue-600">0</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Wait for Site:</span><span id="stat-site-turn" class="font-bold text-orange-600">0</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Wait for Others:</span><span id="stat-other-turn" class="font-bold text-purple-600">0</span></div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Total:</span>
+                        <span id="stat-total" class="font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Wait for Tech:</span>
+                        <span id="stat-tech-turn" class="font-bold text-blue-600">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Wait for Site:</span>
+                        <span id="stat-site-turn" class="font-bold text-orange-600">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Wait for Others:</span>
+                        <span id="stat-other-turn" class="font-bold text-purple-600">0</span>
+                    </div>
                 </div>
             </section>
 
@@ -222,29 +241,44 @@
         </div>
     </main>
 
+    <!-- Modal for Ticket Notes -->
     <div id="notes-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl">
             <h3 class="text-xl font-bold mb-4">Cloud Update</h3>
             <input type="hidden" id="note-ticket-id">
+            
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">WHOSE TURN?</label>
                     <input list="turn-options" id="note-turn" class="input-field mb-0" placeholder="Type or select...">
                     <datalist id="turn-options">
-                        <option value="Technician"><option value="Site"><option value="NCR/ Accenture"><option value="Viking Cloud"><option value="Mood"><option value="DM"><option value="Jolt"><option value="Other">
+                        <option value="Technician">
+                        <option value="Site">
+                        <option value="NCR/ Accenture">
+                        <option value="Viking Cloud">
+                        <option value="Mood">
+                        <option value="DM">
+                        <option value="Jolt">
+                        <option value="Other">
                     </datalist>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">SITE RESPONDED?</label>
-                    <select id="note-responded" class="input-field mb-0"><option value="false">No</option><option value="true">Yes</option></select>
+                    <select id="note-responded" class="input-field mb-0">
+                        <option value="false">No</option>
+                        <option value="true">Yes</option>
+                    </select>
                 </div>
             </div>
+
             <div class="mb-4">
                 <label class="block text-xs font-bold text-gray-500 mb-1">VENDOR:</label>
                 <input list="turn-options" id="note-vendor" class="input-field mb-0" placeholder="Specify Vendor...">
             </div>
+
             <label class="block text-xs font-bold text-gray-500 mb-1">TICKET NOTES:</label>
             <textarea id="note-text" class="input-field h-32" placeholder="Notes sync automatically..."></textarea>
+            
             <div class="flex gap-3">
                 <button onclick="saveNote()" class="flex-1 btn-primary">Sync to Cloud</button>
                 <button onclick="closeNotes()" class="btn-secondary">Cancel</button>
@@ -252,6 +286,7 @@
         </div>
     </div>
 
+    <!-- Recap Modal -->
     <div id="recap-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
@@ -267,16 +302,17 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Global Setup
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'wendys-it-center';
 
-        // Paths
+        // Paths - MUST follow artifacts/{appId}/public/data/{collection}
         const logsRef = collection(db, 'artifacts', appId, 'public', 'data', 'workLogs');
         const ticketsRef = collection(db, 'artifacts', appId, 'public', 'data', 'importedTickets');
 
@@ -284,36 +320,54 @@
         let importedTickets = [];
         let user = null;
 
-        // Initialize Auth
+        // Initialize Auth FIRST and await it
         const initAuth = async () => {
-            await signInAnonymously(auth);
-            onAuthStateChanged(auth, (u) => {
-                user = u;
-                if (user) {
-                    setupListeners();
-                    document.getElementById('loader').classList.add('hidden');
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
                 }
-            });
+            } catch (err) {
+                console.error("Auth failed:", err);
+            }
         };
 
-        // Real-time listeners
+        // Listen for Auth changes and then setup data listeners
+        onAuthStateChanged(auth, (u) => {
+            user = u;
+            if (user) {
+                setupListeners();
+                document.getElementById('loader').classList.add('hidden');
+            }
+        });
+
+        // Real-time listeners - Guarded by Rule 3
         const setupListeners = () => {
+            if (!user) return;
+
             onSnapshot(logsRef, (snapshot) => {
                 workLogs = snapshot.docs.map(d => ({ ...d.data(), fireId: d.id }))
                     .sort((a, b) => b.id - a.id);
                 renderLogs();
-            }, (err) => console.error("Logs sync error:", err));
+            }, (err) => {
+                console.error("Logs sync error:", err);
+                if (err.code === 'permission-denied') showToast("Sync Error: Insufficient Permissions");
+            });
 
             onSnapshot(ticketsRef, (snapshot) => {
                 importedTickets = snapshot.docs.map(d => ({ ...d.data(), fireId: d.id }));
                 renderImportedTickets();
-            }, (err) => console.error("Tickets sync error:", err));
+            }, (err) => {
+                console.error("Tickets sync error:", err);
+                if (err.code === 'permission-denied') showToast("Sync Error: Insufficient Permissions");
+            });
         };
 
         // --- Log Logic ---
         window.logWork = async () => {
             if (!user) return;
-            const id = document.getElementById('editing-id').value;
+            const idInput = document.getElementById('editing-id').value;
             const site = document.getElementById('site-id').value;
             const ticketNum = document.getElementById('ticket-number').value;
             const type = document.getElementById('ticket-type').value;
@@ -323,7 +377,7 @@
             if (!desc) return showToast("Description is required");
 
             const logData = {
-                id: id ? parseInt(id) : Date.now(),
+                id: idInput ? parseInt(idInput) : Date.now(),
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 site: site || "N/A",
                 ticketNum,
@@ -333,29 +387,45 @@
             };
 
             const docId = logData.id.toString();
-            await setDoc(doc(logsRef, docId), logData);
-            showToast(id ? "Updated in Cloud" : "Synced to Cloud");
-            resetForm();
+            try {
+                await setDoc(doc(logsRef, docId), logData);
+                showToast(idInput ? "Updated in Cloud" : "Synced to Cloud");
+                resetForm();
+            } catch (err) {
+                console.error("Save error:", err);
+                showToast("Error saving to cloud");
+            }
         };
 
         window.deleteLog = async (id) => {
-            if (!confirm("Delete this log?")) return;
-            await deleteDoc(doc(logsRef, id.toString()));
-            showToast("Log Removed");
+            if (!user || !confirm("Delete this log?")) return;
+            try {
+                await deleteDoc(doc(logsRef, id.toString()));
+                showToast("Log Removed");
+            } catch (err) {
+                console.error("Delete error:", err);
+            }
         };
 
         window.clearLogs = async () => {
-            if (!confirm("Clear all logs? This affects everyone!")) return;
-            const snapshot = await getDocs(logsRef);
-            const batch = writeBatch(db);
-            snapshot.docs.forEach(d => batch.delete(d.ref));
-            await batch.commit();
-            showToast("Logs Cleared");
+            if (!user || !confirm("Clear all logs for today?")) return;
+            try {
+                const snapshot = await getDocs(logsRef);
+                const batch = writeBatch(db);
+                snapshot.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                showToast("All Logs Cleared");
+            } catch (err) {
+                console.error("Batch error:", err);
+            }
         };
 
         // --- Manager Logic ---
         window.importTickets = async (event) => {
+            if (!user) return;
             const file = event.target.files[0];
+            if (!file) return;
+
             const reader = new FileReader();
             reader.onload = async (e) => {
                 const text = e.target.result;
@@ -365,10 +435,11 @@
                 rows.filter(r => r.trim()).forEach(row => {
                     const cols = parseCSVLine(row);
                     const isFullExport = cols.length >= 9;
-                    const id = cols[0] || 'T' + Date.now() + Math.random().toString(36).substr(2, 5);
+                    const rawId = cols[0] || 'T' + Date.now() + Math.random().toString(36).substr(2, 5);
+                    const safeId = rawId.replace(/[\/\.\#\$\s]/g, '-');
                     
                     const tData = {
-                        id,
+                        id: rawId,
                         site: cols[1] || 'Internal',
                         issue: cols[2] || 'IT Request',
                         date: cols[3] || new Date().toISOString().split('T')[0],
@@ -379,32 +450,44 @@
                         siteResponded: isFullExport ? (cols[8] === 'true') : false,
                         turn: isFullExport ? (cols[9] || 'Other') : 'Other'
                     };
-                    batch.set(doc(ticketsRef, id.replace(/\//g, '-')), tData);
+                    batch.set(doc(ticketsRef, safeId), tData);
                 });
                 
-                await batch.commit();
-                showToast("Bulk Cloud Sync Complete");
+                try {
+                    await batch.commit();
+                    showToast("Bulk Sync Complete");
+                } catch (err) {
+                    console.error("Import error:", err);
+                    showToast("Error importing tickets");
+                }
             };
             reader.readAsText(file);
         };
 
         window.toggleTicketStatus = async (id) => {
+            if (!user) return;
             const t = importedTickets.find(x => x.id === id);
             const newStatus = t.status === 'closed' ? 'pending' : 'closed';
-            await setDoc(doc(ticketsRef, id.replace(/\//g, '-')), { ...t, status: newStatus }, { merge: true });
+            const safeId = id.replace(/[\/\.\#\$\s]/g, '-');
+            await setDoc(doc(ticketsRef, safeId), { ...t, status: newStatus }, { merge: true });
             syncTicketToLog({ ...t, status: newStatus }, newStatus === 'closed' ? "Marked Closed" : "Re-opened");
         };
 
         window.changeAttempt = async (id, delta) => {
+            if (!user) return;
             const t = importedTickets.find(x => x.id === id);
             const newAttempts = Math.max(0, t.attempts + delta);
-            await setDoc(doc(ticketsRef, id.replace(/\//g, '-')), { ...t, attempts: newAttempts }, { merge: true });
-            syncTicketToLog({ ...t, attempts: newAttempts }, "Contact Attempted");
+            const safeId = id.replace(/[\/\.\#\$\s]/g, '-');
+            await setDoc(doc(ticketsRef, safeId), { ...t, attempts: newAttempts }, { merge: true });
+            syncTicketToLog({ ...t, attempts: newAttempts }, "Contact Update");
         };
 
         window.saveNote = async () => {
+            if (!user) return;
             const id = document.getElementById('note-ticket-id').value;
             const t = importedTickets.find(x => x.id === id);
+            if (!t) return;
+
             const updated = {
                 ...t,
                 notes: document.getElementById('note-text').value,
@@ -412,12 +495,14 @@
                 vendor: document.getElementById('note-vendor').value,
                 siteResponded: document.getElementById('note-responded').value === 'true'
             };
-            await setDoc(doc(ticketsRef, id.replace(/\//g, '-')), updated);
+            const safeId = id.replace(/[\/\.\#\$\s]/g, '-');
+            await setDoc(doc(ticketsRef, safeId), updated);
             syncTicketToLog(updated, "Notes Updated");
             closeNotes();
         }
 
         const syncTicketToLog = async (ticket, actionName) => {
+            if (!user) return;
             const existing = workLogs.find(l => l.ticketNum === ticket.id);
             const vendorInfo = ticket.vendor && ticket.vendor !== 'N/A' ? ` [Vendor: ${ticket.vendor}]` : '';
             const desc = `[Sync] ${actionName}${vendorInfo}: Attempts: ${ticket.attempts}. Turn: ${ticket.turn}. Notes: ${ticket.notes || ticket.issue}`;
@@ -435,12 +520,16 @@
         };
 
         window.clearImportedTickets = async () => {
-            if (!confirm("Delete all shared tickets?")) return;
-            const snapshot = await getDocs(ticketsRef);
-            const batch = writeBatch(db);
-            snapshot.docs.forEach(d => batch.delete(d.ref));
-            await batch.commit();
-            showToast("Manager Cleared");
+            if (!user || !confirm("Delete all shared tickets? This affects the whole team!")) return;
+            try {
+                const snapshot = await getDocs(ticketsRef);
+                const batch = writeBatch(db);
+                snapshot.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                showToast("Ticket Manager Cleared");
+            } catch (err) {
+                console.error("Batch clear error:", err);
+            }
         };
 
         // --- Export / Import Utils ---
@@ -472,7 +561,7 @@
             a.click();
         };
 
-        // UI Helpers bound to window
+        // UI Helpers
         window.switchTab = (tab) => {
             document.getElementById('content-log').classList.toggle('hidden', tab !== 'log');
             document.getElementById('content-manager').classList.toggle('hidden', tab !== 'manager');
@@ -527,7 +616,7 @@
                 return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
             });
 
-            // Stats
+            // Stats update
             const open = importedTickets.filter(t => t.status !== 'closed');
             document.getElementById('stat-total').innerText = importedTickets.length;
             document.getElementById('stat-tech-turn').innerText = open.filter(t => (t.turn || '').toLowerCase().includes('tech')).length;
@@ -584,6 +673,7 @@
 
         window.openNotes = (id) => {
             const t = importedTickets.find(x => x.id === id);
+            if (!t) return;
             document.getElementById('note-ticket-id').value = id;
             document.getElementById('note-text').value = t.notes || '';
             document.getElementById('note-turn').value = t.turn || 'Other';
@@ -597,9 +687,10 @@
         
         window.editLog = (id) => {
             const log = workLogs.find(l => l.id == id);
+            if (!log) return;
             document.getElementById('editing-id').value = log.id;
             document.getElementById('site-id').value = log.site === "N/A" ? "" : log.site;
-            document.getElementById('ticket-number').value = log.ticketNum;
+            document.getElementById('ticket-number').value = log.ticketNum || '';
             document.getElementById('ticket-type').value = log.type;
             document.getElementById('work-desc').value = log.desc;
             document.getElementById('ticket-closed').checked = log.closed;
@@ -629,6 +720,7 @@
 
         window.followUpTicket = (id) => {
             const t = importedTickets.find(x => x.id === id);
+            if (!t) return;
             const template = `Team,\n\nI am following up on ticket #${t.id} regarding: ${t.issue}.\n\nPlease let me know if this has been resolved or if further troubleshooting is required.\n\nThanks,\nWendy's IT Technician`;
             copyToClipboard(template, "Follow-up email copied!");
         };
