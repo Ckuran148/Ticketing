@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wendy's IT Technician Command Center (Cloud)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --wendys-red: #e21d38;
+            --wendys-blue: #0072ce;
+            --wendys-yellow: #ffc72c;
+        }
+        .bg-wendys-red { background-color: var(--wendys-red); }
+        .text-wendys-red { color: var(--wendys-red); }
+        .border-wendys-red { border-color: var(--wendys-red); }
+        .text-wendys-blue { color: var(--wendys-blue); }
+        .bg-wendys-blue { background-color: var(--wendys-blue); }
+        
+        body { background-color: #f3f4f6; }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            margin-top: 0.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .btn-primary {
+            background-color: var(--wendys-red);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover { opacity: 0.9; }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            border-bottom-color: var(--wendys-red);
+            color: var(--wendys-red);
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #d1d1d1; border-radius: 10px; }
+        
+        .status-badge-closed { background-color: #def7ec; color: #03543f; }
+        .status-badge-pending { background-color: #fdf2f2; color: #9b1c1c; }
+        
+        .turn-tech { background-color: #ebf5ff; color: #1e429f; }
+        .turn-site { background-color: #fef3c7; color: #92400e; }
+        .turn-vendor { background-color: #f3e8ff; color: #6b21a8; }
+        .turn-mgmt { background-color: #e1effe; color: #03543f; }
+        .turn-other { background-color: #f3f4f6; color: #374151; }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div id="loader" class="loading-overlay">
+        <div class="text-wendys-red font-bold text-xl animate-pulse">Syncing Cloud Center...</div>
+    </div>
+
+    <header class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-wendys-red rounded-full flex items-center justify-center text-white font-bold text-2xl">W</div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">IT Technician Command Center</h1>
+                <p class="text-xs text-gray-500">Live Cloud Sync Enabled | Multiple User Support</p>
+            </div>
+        </div>
+        <div id="current-date" class="text-gray-500 font-medium italic text-right text-sm"></div>
+    </header>
+
+    <nav class="max-w-7xl mx-auto flex gap-4 mb-6 border-b border-gray-200">
+        <button onclick="switchTab('log')" id="tab-log" class="tab-btn active">Daily Work Log</button>
+        <button onclick="switchTab('manager')" id="tab-manager" class="tab-btn">Ticket Manager (Imported)</button>
+    </nav>
+
+    <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+        <div id="content-log" class="lg:col-span-3 space-y-6">
+            <section class="card border-t-4 border-wendys-red" id="log-form-section">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">📝 <span id="form-title">Log New Work / Activity</span></h2>
+                <input type="hidden" id="editing-id" value="">
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700">Site # / Name <span id="site-req-star" class="text-red-500">*</span></label>
+                        <input type="text" id="site-id" class="input-field" placeholder="e.g. Site #4502">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700">Ticket # (Optional)</label>
+                        <input type="text" id="ticket-number" class="input-field" placeholder="e.g. INC10045">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700">Activity Type</label>
+                        <select id="ticket-type" class="input-field" onchange="toggleSiteRequirement()">
+                            <optgroup label="Tickets" id="group-tickets">
+                                <option value="Aloha POS">Aloha POS</option>
+                                <option value="KDS / Controller">KDS / Controller</option>
+                                <option value="Network">Network / Router</option>
+                                <option value="Printer">Printer Issue</option>
+                                <option value="Email / Login">Email / Login Issue</option>
+                            </optgroup>
+                            <optgroup label="Non-Ticket / Admin" id="group-admin">
+                                <option value="Email Correspondence">Email Correspondence</option>
+                                <option value="Daily Recap">Daily Recap / Reporting</option>
+                                <option value="Phone Troubleshooting">Phone Troubleshooting</option>
+                                <option value="Project Work">Project Work</option>
+                                <option value="Meeting">Meeting / Internal</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+                <textarea id="work-desc" class="input-field h-24" placeholder="Briefly describe what you did..."></textarea>
+                <div class="flex items-center justify-between mb-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="ticket-closed" class="w-5 h-5 accent-red-600">
+                        <span class="text-sm font-semibold text-gray-700">Task Completed / Ticket Closed</span>
+                    </label>
+                    <button id="cancel-edit" onclick="resetForm()" class="hidden text-sm text-gray-500 hover:underline">Cancel Edit</button>
+                </div>
+                <button id="submit-btn" onclick="logWork()" class="btn-primary w-full md:w-auto">Add to Daily Log</button>
+            </section>
+
+            <section class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">Live Activity Log</h2>
+                    <button onclick="clearLogs()" class="text-sm text-gray-400 hover:text-red-500">Clear All</button>
+                </div>
+                <div id="activity-list" class="space-y-3"></div>
+            </section>
+        </div>
+
+        <div id="content-manager" class="lg:col-span-3 space-y-6 hidden">
+            <section class="card border-t-4 border-wendys-blue">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold">Imported Ticket Tracker</h2>
+                        <p class="text-sm text-gray-500">Synced across all technicians.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <label class="bg-gray-100 px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-200 transition text-xs font-semibold">
+                            📁 Import CSV
+                            <input type="file" id="csv-import" class="hidden" accept=".csv" onchange="importTickets(event)">
+                        </label>
+                        <button onclick="exportTicketsCSV()" class="bg-gray-800 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-black transition">
+                            💾 Export CSV
+                        </button>
+                        <button onclick="clearImportedTickets()" class="text-xs text-red-500 hover:underline">Clear List</button>
+                    </div>
+                </div>
+
+                <div class="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="text" id="ticket-search" onkeyup="filterImportedTickets()" placeholder="Search Site or Ticket #..." class="input-field mb-0 md:col-span-2">
+                    <select id="sort-order" onchange="filterImportedTickets()" class="input-field mb-0">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
+                    <select id="filter-status" onchange="filterImportedTickets()" class="input-field mb-0">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending Only</option>
+                        <option value="closed">Closed Only</option>
+                    </select>
+                </div>
+
+                <div id="imported-ticket-list" class="space-y-4"></div>
+            </section>
+        </div>
+
+        <div class="space-y-6">
+            <section class="card bg-gray-900 text-white">
+                <h2 class="text-xl font-bold mb-2 text-wendys-yellow">Daily Recap</h2>
+                <button onclick="generateRecap()" class="w-full bg-wendys-blue hover:bg-blue-600 text-white py-3 rounded-lg font-bold transition">📋 Generate Email</button>
+            </section>
+
+            <section class="card">
+                <h2 class="text-lg font-bold mb-3 border-b pb-2 text-gray-700">Live Stats</h2>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between"><span class="text-gray-500">Total:</span><span id="stat-total" class="font-bold">0</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Wait for Tech:</span><span id="stat-tech-turn" class="font-bold text-blue-600">0</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Wait for Site:</span><span id="stat-site-turn" class="font-bold text-orange-600">0</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Wait for Others:</span><span id="stat-other-turn" class="font-bold text-purple-600">0</span></div>
+                </div>
+            </section>
+
+            <section class="card border-l-4 border-wendys-red">
+                <h2 class="text-lg font-bold mb-3">Email Templates</h2>
+                <div class="space-y-2">
+                    <button onclick="copyTemplate('welcome')" class="w-full text-left text-xs bg-white border p-2 rounded hover:bg-gray-50">Ticket Received</button>
+                    <button onclick="copyTemplate('followup')" class="w-full text-left text-xs bg-white border p-2 rounded hover:bg-gray-50">Contact Follow-up</button>
+                    <button onclick="copyTemplate('closed')" class="w-full text-left text-xs bg-white border p-2 rounded hover:bg-gray-50">Resolution Confirmation</button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div id="notes-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl">
+            <h3 class="text-xl font-bold mb-4">Cloud Update</h3>
+            <input type="hidden" id="note-ticket-id">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">WHOSE TURN?</label>
+                    <input list="turn-options" id="note-turn" class="input-field mb-0" placeholder="Type or select...">
+                    <datalist id="turn-options">
+                        <option value="Technician"><option value="Site"><option value="NCR/ Accenture"><option value="Viking Cloud"><option value="Mood"><option value="DM"><option value="Jolt"><option value="Other">
+                    </datalist>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">SITE RESPONDED?</label>
+                    <select id="note-responded" class="input-field mb-0"><option value="false">No</option><option value="true">Yes</option></select>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-500 mb-1">VENDOR:</label>
+                <input list="turn-options" id="note-vendor" class="input-field mb-0" placeholder="Specify Vendor...">
+            </div>
+            <label class="block text-xs font-bold text-gray-500 mb-1">TICKET NOTES:</label>
+            <textarea id="note-text" class="input-field h-32" placeholder="Notes sync automatically..."></textarea>
+            <div class="flex gap-3">
+                <button onclick="saveNote()" class="flex-1 btn-primary">Sync to Cloud</button>
+                <button onclick="closeNotes()" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="recap-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Daily IT Summary</h3>
+                <button onclick="closeRecap()" class="text-gray-500 text-2xl">&times;</button>
+            </div>
+            <div id="recap-content" class="bg-gray-50 p-4 border rounded-lg font-mono text-sm whitespace-pre-wrap max-h-96 overflow-y-auto mb-4"></div>
+            <button onclick="copyRecapToClipboard()" class="w-full btn-primary">Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-xl translate-y-20 transition-transform duration-300 z-50"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'wendys-it-center';
+
+        // Paths
+        const logsRef = collection(db, 'artifacts', appId, 'public', 'data', 'workLogs');
+        const ticketsRef = collection(db, 'artifacts', appId, 'public', 'data', 'importedTickets');
+
+        let workLogs = [];
+        let importedTickets = [];
+        let user = null;
+
+        // Initialize Auth
+        const initAuth = async () => {
+            await signInAnonymously(auth);
+            onAuthStateChanged(auth, (u) => {
+                user = u;
+                if (user) {
+                    setupListeners();
+                    document.getElementById('loader').classList.add('hidden');
+                }
+            });
+        };
+
+        // Real-time listeners
+        const setupListeners = () => {
+            onSnapshot(logsRef, (snapshot) => {
+                workLogs = snapshot.docs.map(d => ({ ...d.data(), fireId: d.id }))
+                    .sort((a, b) => b.id - a.id);
+                renderLogs();
+            }, (err) => console.error("Logs sync error:", err));
+
+            onSnapshot(ticketsRef, (snapshot) => {
+                importedTickets = snapshot.docs.map(d => ({ ...d.data(), fireId: d.id }));
+                renderImportedTickets();
+            }, (err) => console.error("Tickets sync error:", err));
+        };
+
+        // --- Log Logic ---
+        window.logWork = async () => {
+            if (!user) return;
+            const id = document.getElementById('editing-id').value;
+            const site = document.getElementById('site-id').value;
+            const ticketNum = document.getElementById('ticket-number').value;
+            const type = document.getElementById('ticket-type').value;
+            const desc = document.getElementById('work-desc').value;
+            const closed = document.getElementById('ticket-closed').checked;
+
+            if (!desc) return showToast("Description is required");
+
+            const logData = {
+                id: id ? parseInt(id) : Date.now(),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                site: site || "N/A",
+                ticketNum,
+                type,
+                desc,
+                closed
+            };
+
+            const docId = logData.id.toString();
+            await setDoc(doc(logsRef, docId), logData);
+            showToast(id ? "Updated in Cloud" : "Synced to Cloud");
+            resetForm();
+        };
+
+        window.deleteLog = async (id) => {
+            if (!confirm("Delete this log?")) return;
+            await deleteDoc(doc(logsRef, id.toString()));
+            showToast("Log Removed");
+        };
+
+        window.clearLogs = async () => {
+            if (!confirm("Clear all logs? This affects everyone!")) return;
+            const snapshot = await getDocs(logsRef);
+            const batch = writeBatch(db);
+            snapshot.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            showToast("Logs Cleared");
+        };
+
+        // --- Manager Logic ---
+        window.importTickets = async (event) => {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const text = e.target.result;
+                const rows = text.split(/\r?\n/).slice(1);
+                const batch = writeBatch(db);
+                
+                rows.filter(r => r.trim()).forEach(row => {
+                    const cols = parseCSVLine(row);
+                    const isFullExport = cols.length >= 9;
+                    const id = cols[0] || 'T' + Date.now() + Math.random().toString(36).substr(2, 5);
+                    
+                    const tData = {
+                        id,
+                        site: cols[1] || 'Internal',
+                        issue: cols[2] || 'IT Request',
+                        date: cols[3] || new Date().toISOString().split('T')[0],
+                        vendor: cols[4] || 'N/A',
+                        notes: isFullExport ? (cols[5] || '') : '',
+                        status: isFullExport ? (cols[6] || 'pending') : 'pending',
+                        attempts: isFullExport ? parseInt(cols[7] || 0) : 0,
+                        siteResponded: isFullExport ? (cols[8] === 'true') : false,
+                        turn: isFullExport ? (cols[9] || 'Other') : 'Other'
+                    };
+                    batch.set(doc(ticketsRef, id.replace(/\//g, '-')), tData);
+                });
+                
+                await batch.commit();
+                showToast("Bulk Cloud Sync Complete");
+            };
+            reader.readAsText(file);
+        };
+
+        window.toggleTicketStatus = async (id) => {
+            const t = importedTickets.find(x => x.id === id);
+            const newStatus = t.status === 'closed' ? 'pending' : 'closed';
+            await setDoc(doc(ticketsRef, id.replace(/\//g, '-')), { ...t, status: newStatus }, { merge: true });
+            syncTicketToLog({ ...t, status: newStatus }, newStatus === 'closed' ? "Marked Closed" : "Re-opened");
+        };
+
+        window.changeAttempt = async (id, delta) => {
+            const t = importedTickets.find(x => x.id === id);
+            const newAttempts = Math.max(0, t.attempts + delta);
+            await setDoc(doc(ticketsRef, id.replace(/\//g, '-')), { ...t, attempts: newAttempts }, { merge: true });
+            syncTicketToLog({ ...t, attempts: newAttempts }, "Contact Attempted");
+        };
+
+        window.saveNote = async () => {
+            const id = document.getElementById('note-ticket-id').value;
+            const t = importedTickets.find(x => x.id === id);
+            const updated = {
+                ...t,
+                notes: document.getElementById('note-text').value,
+                turn: document.getElementById('note-turn').value,
+                vendor: document.getElementById('note-vendor').value,
+                siteResponded: document.getElementById('note-responded').value === 'true'
+            };
+            await setDoc(doc(ticketsRef, id.replace(/\//g, '-')), updated);
+            syncTicketToLog(updated, "Notes Updated");
+            closeNotes();
+        }
+
+        const syncTicketToLog = async (ticket, actionName) => {
+            const existing = workLogs.find(l => l.ticketNum === ticket.id);
+            const vendorInfo = ticket.vendor && ticket.vendor !== 'N/A' ? ` [Vendor: ${ticket.vendor}]` : '';
+            const desc = `[Sync] ${actionName}${vendorInfo}: Attempts: ${ticket.attempts}. Turn: ${ticket.turn}. Notes: ${ticket.notes || ticket.issue}`;
+            
+            const logData = {
+                id: existing ? existing.id : Date.now(),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                site: ticket.site,
+                ticketNum: ticket.id,
+                type: "Aloha POS",
+                desc,
+                closed: (ticket.status === 'closed')
+            };
+            await setDoc(doc(logsRef, logData.id.toString()), logData);
+        };
+
+        window.clearImportedTickets = async () => {
+            if (!confirm("Delete all shared tickets?")) return;
+            const snapshot = await getDocs(ticketsRef);
+            const batch = writeBatch(db);
+            snapshot.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            showToast("Manager Cleared");
+        };
+
+        // --- Export / Import Utils ---
+        function parseCSVLine(line) {
+            const result = [];
+            let current = "";
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') inQuotes = !inQuotes;
+                else if (char === ',' && !inQuotes) { result.push(current.trim()); current = ""; }
+                else current += char;
+            }
+            result.push(current.trim());
+            return result.map(val => val.replace(/^"|"$/g, ''));
+        }
+
+        window.exportTicketsCSV = () => {
+            if (importedTickets.length === 0) return showToast("Nothing to export");
+            let csv = "Ticket#,Site,Issue,Date,Vendor,Notes,Status,Attempts,SiteResponded,WhoseTurn\n";
+            importedTickets.forEach(t => {
+                csv += `"${t.id}","${t.site}","${(t.issue || '').replace(/"/g, '""')}","${t.date}","${(t.vendor || 'N/A').replace(/"/g, '""')}","${(t.notes || '').replace(/"/g, '""')}","${t.status}","${t.attempts}","${t.siteResponded}","${t.turn}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `wendys_cloud_export_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        };
+
+        // UI Helpers bound to window
+        window.switchTab = (tab) => {
+            document.getElementById('content-log').classList.toggle('hidden', tab !== 'log');
+            document.getElementById('content-manager').classList.toggle('hidden', tab !== 'manager');
+            document.getElementById('tab-log').classList.toggle('active', tab === 'log');
+            document.getElementById('tab-manager').classList.toggle('active', tab === 'manager');
+        };
+
+        window.toggleSiteRequirement = () => {
+            const select = document.getElementById('ticket-type');
+            const group = select.options[select.selectedIndex].parentElement.id;
+            document.getElementById('site-req-star').classList.toggle('hidden', group === 'group-admin');
+        };
+
+        window.renderLogs = () => {
+            const list = document.getElementById('activity-list');
+            if (workLogs.length === 0) return list.innerHTML = `<p class="text-gray-400 italic text-center py-4">No activity synced yet.</p>`;
+            list.innerHTML = workLogs.map(log => `
+                <div class="flex items-start gap-4 p-4 border rounded-lg bg-white group hover:border-wendys-blue transition">
+                    <div class="w-2 h-2 mt-2 rounded-full ${log.closed ? 'bg-green-500' : 'bg-yellow-500'}"></div>
+                    <div class="flex-1">
+                        <div class="flex justify-between">
+                            <span class="font-bold text-sm text-gray-800">${log.site} ${log.ticketNum ? `<span class="text-wendys-blue">#${log.ticketNum}</span>` : ''}</span>
+                            <span class="text-[10px] uppercase font-bold text-gray-400">${log.time}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-1">${log.desc}</p>
+                    </div>
+                    <div class="flex gap-2 opacity-0 group-hover:opacity-100">
+                        <button onclick="editLog(${log.id})" class="text-xs text-blue-500 hover:underline">Edit</button>
+                        <button onclick="deleteLog(${log.id})" class="text-xs text-red-400 hover:underline">Del</button>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        window.renderImportedTickets = () => {
+            const list = document.getElementById('imported-ticket-list');
+            if (importedTickets.length === 0) return list.innerHTML = `<div class="text-center py-10 text-gray-400"><p>No shared tickets found.</p></div>`;
+
+            const queryText = document.getElementById('ticket-search').value.toLowerCase();
+            const statusFilter = document.getElementById('filter-status').value;
+            const sortOrder = document.getElementById('sort-order').value;
+
+            let filtered = importedTickets.filter(t => {
+                const matchesSearch = t.id.toLowerCase().includes(queryText) || t.site.toLowerCase().includes(queryText) || t.issue.toLowerCase().includes(queryText);
+                const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
+                return matchesSearch && matchesStatus;
+            });
+
+            filtered.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+            });
+
+            // Stats
+            const open = importedTickets.filter(t => t.status !== 'closed');
+            document.getElementById('stat-total').innerText = importedTickets.length;
+            document.getElementById('stat-tech-turn').innerText = open.filter(t => (t.turn || '').toLowerCase().includes('tech')).length;
+            document.getElementById('stat-site-turn').innerText = open.filter(t => (t.turn || '').toLowerCase().includes('site')).length;
+            document.getElementById('stat-other-turn').innerText = open.filter(t => !(t.turn || '').toLowerCase().includes('tech') && !(t.turn || '').toLowerCase().includes('site')).length;
+
+            list.innerHTML = filtered.map(t => `
+                <div class="border rounded-lg p-4 bg-white transition hover:shadow-sm ${t.status === 'closed' ? 'opacity-60 bg-gray-50' : ''}">
+                    <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+                        <div class="flex-1">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${t.status === 'closed' ? 'status-badge-closed' : 'status-badge-pending'}">${t.status.toUpperCase()}</span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${getTurnClass(t.turn)}">TURN: ${(t.turn || 'N/A').toUpperCase()}</span>
+                                ${t.siteResponded ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-800">SITE RESPONDED</span>' : ''}
+                                <span class="text-[10px] font-mono text-gray-400">${t.date}</span>
+                            </div>
+                            <h4 class="font-bold text-gray-800 flex items-center gap-2">
+                                ${t.site} <span class="text-wendys-blue font-mono text-sm">#${t.id}</span>
+                                ${t.vendor && t.vendor !== 'N/A' ? `<span class="ml-2 text-[10px] text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">Vendor: ${t.vendor}</span>` : ''}
+                            </h4>
+                            <p class="text-sm text-gray-600 mb-2">${t.issue}</p>
+                            ${t.notes ? `<div class="text-[11px] bg-gray-50 p-2 border-l-2 border-wendys-blue text-gray-700 italic"><b>Last Note:</b> ${t.notes}</div>` : ''}
+                        </div>
+                        <div class="flex flex-col gap-3 w-full md:w-48">
+                            <div class="flex items-center justify-between bg-gray-100 rounded-lg p-1">
+                                <span class="text-[10px] font-bold px-2 text-gray-500 uppercase">Attempts: ${t.attempts}</span>
+                                <div class="flex gap-1">
+                                    <button onclick="changeAttempt('${t.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white border rounded hover:bg-gray-50">-</button>
+                                    <button onclick="changeAttempt('${t.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white border rounded hover:bg-gray-50">+</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="openNotes('${t.id}')" class="px-2 py-1.5 text-[11px] font-bold border rounded bg-white hover:bg-gray-50">Update</button>
+                                <button onclick="followUpTicket('${t.id}')" class="px-2 py-1.5 text-[11px] font-bold bg-wendys-blue text-white rounded">Email</button>
+                            </div>
+                            <button onclick="toggleTicketStatus('${t.id}')" class="w-full py-1.5 text-[11px] font-bold rounded ${t.status === 'closed' ? 'bg-gray-300' : 'bg-green-600 text-white'}">
+                                ${t.status === 'closed' ? 'Re-open Ticket' : 'Mark Resolved'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        function getTurnClass(turn) {
+            if (!turn) return 'turn-other';
+            const t = turn.toLowerCase();
+            if (t.includes('tech')) return 'turn-tech';
+            if (t.includes('site')) return 'turn-site';
+            if (t.includes('dm')) return 'turn-mgmt';
+            if (t.includes('ncr') || t.includes('viking') || t.includes('mood') || t.includes('jolt') || t.includes('accenture')) return 'turn-vendor';
+            return 'turn-other';
+        }
+
+        window.openNotes = (id) => {
+            const t = importedTickets.find(x => x.id === id);
+            document.getElementById('note-ticket-id').value = id;
+            document.getElementById('note-text').value = t.notes || '';
+            document.getElementById('note-turn').value = t.turn || 'Other';
+            document.getElementById('note-vendor').value = t.vendor || 'N/A';
+            document.getElementById('note-responded').value = t.siteResponded.toString();
+            document.getElementById('notes-modal').classList.remove('hidden');
+        };
+
+        window.closeNotes = () => document.getElementById('notes-modal').classList.add('hidden');
+        window.filterImportedTickets = () => renderImportedTickets();
+        
+        window.editLog = (id) => {
+            const log = workLogs.find(l => l.id == id);
+            document.getElementById('editing-id').value = log.id;
+            document.getElementById('site-id').value = log.site === "N/A" ? "" : log.site;
+            document.getElementById('ticket-number').value = log.ticketNum;
+            document.getElementById('ticket-type').value = log.type;
+            document.getElementById('work-desc').value = log.desc;
+            document.getElementById('ticket-closed').checked = log.closed;
+            document.getElementById('submit-btn').innerText = "Update Entry";
+            document.getElementById('cancel-edit').classList.remove('hidden');
+            switchTab('log');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        };
+
+        window.resetForm = () => {
+            document.getElementById('editing-id').value = "";
+            document.getElementById('site-id').value = "";
+            document.getElementById('ticket-number').value = "";
+            document.getElementById('work-desc').value = "";
+            document.getElementById('ticket-closed').checked = false;
+            document.getElementById('submit-btn').innerText = "Add to Daily Log";
+            document.getElementById('cancel-edit').classList.add('hidden');
+        };
+
+        window.copyTemplate = (type) => {
+            let t = "";
+            if (type === 'welcome') t = "Team,\n\nI've received your request. I'm checking the logs for your site and will call shortly.\n\nThanks,\nWendy's IT Technician";
+            if (type === 'followup') t = "Team,\n\nI attempted to call the site to troubleshoot the earlier request but was unable to reach anyone. Please let me know a good time to call back.\n\nThanks,\nWendy's IT Technician";
+            if (type === 'closed') t = "Team,\n\nThis request has been resolved. Please test the register and let me know if you need anything else.\n\nThanks,\nWendy's IT Technician";
+            copyToClipboard(t, "Template copied!");
+        };
+
+        window.followUpTicket = (id) => {
+            const t = importedTickets.find(x => x.id === id);
+            const template = `Team,\n\nI am following up on ticket #${t.id} regarding: ${t.issue}.\n\nPlease let me know if this has been resolved or if further troubleshooting is required.\n\nThanks,\nWendy's IT Technician`;
+            copyToClipboard(template, "Follow-up email copied!");
+        };
+
+        window.generateRecap = () => {
+            if (workLogs.length === 0) return showToast("No logs to recap!");
+            const closed = workLogs.filter(l => l.closed);
+            const pending = workLogs.filter(l => !l.closed);
+            let txt = `DAILY IT ACTIVITY SUMMARY - ${new Date().toLocaleDateString()}\n`;
+            txt += "=".repeat(40) + "\n";
+            txt += `Handled: ${workLogs.length} items | Closed: ${closed.length}\n\n`;
+            if (closed.length) txt += "RESOLVED:\n" + closed.map(l => `• ${l.site}${l.ticketNum ? ' [#'+l.ticketNum+']' : ''}: ${l.desc}`).join('\n');
+            if (pending.length) txt += "\n\nPENDING/FOLLOW-UP:\n" + pending.map(l => `• ${l.site}${l.ticketNum ? ' [#'+l.ticketNum+']' : ''}: ${l.desc}`).join('\n');
+            txt += "\n\nThanks,\nWendy's IT Technician";
+            document.getElementById('recap-content').innerText = txt;
+            document.getElementById('recap-modal').classList.remove('hidden');
+        };
+
+        window.closeRecap = () => document.getElementById('recap-modal').classList.add('hidden');
+        window.copyRecapToClipboard = () => copyToClipboard(document.getElementById('recap-content').innerText, "Recap copied!");
+
+        function copyToClipboard(text, toastMsg) {
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast(toastMsg);
+        }
+
+        function showToast(m) { 
+            const t = document.getElementById('toast'); 
+            t.innerText = m; 
+            t.classList.remove('translate-y-20'); 
+            setTimeout(() => t.classList.add('translate-y-20'), 3000); 
+        }
+
+        initAuth();
+    </script>
+</body>
+</html>
