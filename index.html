@@ -114,9 +114,10 @@
         <div id="current-date" class="text-gray-500 font-medium italic text-right text-sm"></div>
     </header>
 
-    <nav class="max-w-7xl mx-auto flex gap-4 mb-6 border-b border-gray-200">
+    <nav class="max-w-7xl mx-auto flex gap-4 mb-6 border-b border-gray-200 overflow-x-auto">
         <button onclick="switchTab('log')" id="tab-log" class="tab-btn active">Daily Work Log</button>
-        <button onclick="switchTab('manager')" id="tab-manager" class="tab-btn">Ticket Manager (Imported)</button>
+        <button onclick="switchTab('manager')" id="tab-manager" class="tab-btn">Ticket Manager</button>
+        <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn">Control Panel</button>
     </nav>
 
     <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -212,7 +213,7 @@
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <label class="bg-gray-100 px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-200 transition text-xs font-semibold">
-                            📁 Import CSV
+                            📁 Import Tickets CSV
                             <input type="file" id="csv-import" class="hidden" accept=".csv" onchange="importTickets(event)">
                         </label>
                         <button onclick="exportTicketsCSV()" class="bg-gray-800 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-black transition">
@@ -236,6 +237,88 @@
                 </div>
 
                 <div id="imported-ticket-list" class="space-y-4"></div>
+            </section>
+        </div>
+
+        <!-- Tab Content: Control Panel -->
+        <div id="content-settings" class="lg:col-span-3 space-y-6 hidden">
+            <section class="card border-t-4 border-gray-600">
+                <h2 class="text-xl font-bold mb-4">⚙️ Control Panel</h2>
+                
+                <!-- Site Directory -->
+                <div class="mb-8">
+                    <h3 class="font-bold text-gray-700 border-b pb-2 mb-4">1. Site & Email Directory</h3>
+                    <p class="text-sm text-gray-500 mb-2">Manually upload `Emails DM Sites CSV.csv` or try loading from server.</p>
+                    <div class="flex items-center gap-4">
+                        <label class="bg-wendys-blue text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-700 transition text-sm font-semibold">
+                            📁 Upload Local CSV
+                            <input type="file" id="site-csv-import" class="hidden" accept=".csv" onchange="importSiteDirectory(event)">
+                        </label>
+                        <button onclick="loadServerDirectory()" class="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition text-sm font-semibold">
+                            ☁️ Load Default CSV (Server)
+                        </button>
+                        <span id="site-count-badge" class="text-sm font-mono bg-gray-100 px-2 py-1 rounded">0 Sites Loaded</span>
+                    </div>
+                </div>
+
+                <!-- Email Config -->
+                <div class="mb-8">
+                    <h3 class="font-bold text-gray-700 border-b pb-2 mb-4">2. Default Email Configuration</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">DEFAULT CC (Comma separated):</label>
+                            <input type="text" id="default-cc" class="input-field" value="mbisbee@wenspok.com" placeholder="email@example.com">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vendor Config -->
+                <div class="mb-8">
+                    <h3 class="font-bold text-gray-700 border-b pb-2 mb-4">3. Vendor Directory</h3>
+                    <p class="text-xs text-gray-500 mb-2">Add vendors and their departments. Set a default email for each vendor.</p>
+                    <div class="flex gap-2 mb-2">
+                        <button onclick="openVendorEditor()" class="bg-purple-600 text-white px-4 py-2 rounded font-bold text-sm">➕ Add New Vendor</button>
+                    </div>
+                    <div id="vendor-list" class="space-y-2 border p-2 rounded bg-gray-50 max-h-60 overflow-y-auto">
+                        <!-- Vendors rendered here -->
+                    </div>
+                </div>
+
+                <!-- Template Editor -->
+                <div class="mb-8">
+                    <h3 class="font-bold text-gray-700 border-b pb-2 mb-4">4. Email Templates</h3>
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-4 text-xs text-yellow-800">
+                        <strong>Variables:</strong> 
+                        <code>{ticket}</code> = Ticket #, 
+                        <code>{site}</code> = Site Name, 
+                        <code>{issue}</code> = Short Description, 
+                        <code>{created}</code> = Date Opened, 
+                        <code>{lifespan}</code> = Days Open.
+                    </div>
+                    <div class="flex gap-2 mb-4">
+                        <button onclick="openTemplateEditor()" class="bg-green-600 text-white px-4 py-2 rounded text-sm font-bold w-full md:w-auto">➕ Create New Template</button>
+                    </div>
+                    <div id="template-list" class="space-y-2">
+                        <!-- Templates rendered here -->
+                    </div>
+                </div>
+
+                <!-- Quick Links Editor -->
+                <div>
+                    <h3 class="font-bold text-gray-700 border-b pb-2 mb-4">5. Quick Links</h3>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="new-link-name" class="input-field mb-0 w-1/3" placeholder="Link Name">
+                        <input type="text" id="new-link-url" class="input-field mb-0 w-2/3" placeholder="URL (https://...)">
+                        <button onclick="addQuickLink()" class="bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm">Add</button>
+                    </div>
+                    <div id="quick-links-editor" class="space-y-2 border p-2 rounded bg-gray-50 max-h-60 overflow-y-auto">
+                        <!-- Quick Link Editors -->
+                    </div>
+                    <div class="mt-6 pt-4 border-t">
+                        <button onclick="saveSettings()" class="btn-primary w-full md:w-auto">💾 Save All Settings</button>
+                    </div>
+                </div>
+
             </section>
         </div>
 
@@ -291,6 +374,15 @@
                 </div>
             </section>
 
+            <!-- Quick Links -->
+            <section class="card">
+                <h2 class="text-lg font-bold mb-3 border-b pb-2 text-gray-700">Quick Links</h2>
+                <div id="quick-links-list" class="space-y-2 text-sm flex flex-col">
+                    <!-- Links rendered here -->
+                    <p class="text-gray-400 italic text-xs">No links added.</p>
+                </div>
+            </section>
+
             <section class="card border-l-4 border-wendys-red">
                 <h2 class="text-lg font-bold mb-3 text-gray-700">Email Templates</h2>
                 <div class="space-y-2">
@@ -301,6 +393,41 @@
             </section>
         </div>
     </main>
+
+    <!-- Vendor Editor Modal -->
+    <div id="vendor-editor-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-xl font-bold">Edit Vendor Details</h3>
+                <button onclick="closeVendorEditor()" class="text-gray-500 hover:text-red-500 font-bold">&times;</button>
+            </div>
+            <input type="hidden" id="edit-vendor-id">
+            
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-500 mb-1">VENDOR NAME:</label>
+                <input type="text" id="edit-vendor-name" class="input-field mb-0">
+            </div>
+
+            <h4 class="text-sm font-bold text-gray-700 mb-2 border-b">Departments / Emails</h4>
+            <div id="edit-vendor-depts" class="space-y-2 mb-4">
+                <!-- Dept rows injected here -->
+            </div>
+
+            <div class="bg-gray-50 p-2 rounded border mb-4">
+                <h5 class="text-xs font-bold text-gray-500 mb-2">Add New Department</h5>
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <input type="text" id="new-dept-name" class="input-field mb-0 text-xs" placeholder="Dept Name (e.g. Billing)">
+                    <input type="text" id="new-dept-email" class="input-field mb-0 text-xs" placeholder="Email Address">
+                </div>
+                <button onclick="addVendorDeptRow()" class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold w-full">Add Department</button>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="saveVendorChanges()" class="flex-1 btn-primary">Save Vendor</button>
+                <button onclick="closeVendorEditor()" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal for Ticket Notes -->
     <div id="notes-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
@@ -343,6 +470,69 @@
             <div class="flex gap-3">
                 <button onclick="saveNote()" class="flex-1 btn-primary">Sync to Cloud</button>
                 <button onclick="closeNotes()" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Template Selection Modal -->
+    <div id="email-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl">
+            <h3 class="text-xl font-bold mb-1">Compose Email</h3>
+            <div id="email-mode-display" class="mb-4 font-bold uppercase text-xs tracking-wide"></div>
+            
+            <div id="email-vendor-dept-container" class="hidden mb-4 bg-purple-50 p-2 rounded border border-purple-200">
+                <label class="block text-xs font-bold text-purple-700 mb-1">Select Department:</label>
+                <select id="email-vendor-dept" class="w-full p-2 border rounded text-sm"></select>
+            </div>
+
+            <p class="text-xs text-gray-500 mb-4">Select a template to launch your mail client with pre-filled details.</p>
+            <input type="hidden" id="email-ticket-id">
+            <input type="hidden" id="email-mode-val">
+            <div id="email-template-options" class="space-y-2 mb-4">
+                <!-- Buttons injected here -->
+            </div>
+            <button onclick="closeEmailModal()" class="btn-secondary w-full">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Template Editor Modal -->
+    <div id="template-editor-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-xl font-bold">Edit Email Template</h3>
+                <button onclick="closeTemplateEditor()" class="text-gray-500 hover:text-red-500 font-bold">&times;</button>
+            </div>
+            <input type="hidden" id="edit-tpl-id">
+            
+            <div class="mb-3">
+                <label class="block text-xs font-bold text-gray-500 mb-1">TEMPLATE NAME:</label>
+                <input type="text" id="edit-tpl-name" class="input-field mb-0" placeholder="e.g. Follow Up">
+            </div>
+
+            <div class="mb-3">
+                <label class="block text-xs font-bold text-gray-500 mb-1">EMAIL SUBJECT:</label>
+                <input type="text" id="edit-tpl-subject" class="input-field mb-0 font-mono text-sm" placeholder="NCR Ticket {ticket}...">
+            </div>
+
+            <div class="mb-3">
+                <label class="block text-xs font-bold text-gray-500 mb-1">EMAIL BODY:</label>
+                <textarea id="edit-tpl-body" class="input-field h-40 font-mono text-sm mb-0"></textarea>
+            </div>
+
+            <div class="flex gap-4 mb-6">
+                <label class="flex items-center gap-2 cursor-pointer bg-gray-50 p-2 rounded border w-1/2">
+                    <input type="checkbox" id="edit-tpl-increment">
+                    <span class="text-xs font-bold text-gray-700">Auto-Increment Attempt?</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer bg-gray-50 p-2 rounded border w-1/2">
+                    <input type="checkbox" id="edit-tpl-ccdm">
+                    <span class="text-xs font-bold text-gray-700">Include DM in CC?</span>
+                </label>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="saveTemplateChanges()" class="flex-1 btn-primary">Save Template</button>
+                <button onclick="closeTemplateEditor()" class="btn-secondary">Cancel</button>
             </div>
         </div>
     </div>
@@ -393,10 +583,24 @@
 
         const logsRef = collection(db, 'artifacts', teamAppId, 'public', 'data', 'workLogs');
         const ticketsRef = collection(db, 'artifacts', teamAppId, 'public', 'data', 'importedTickets');
+        const settingsRef = collection(db, 'artifacts', teamAppId, 'public', 'data', 'settings');
 
         let workLogs = [];
         let importedTickets = [];
+        let siteDirectory = {}; // Site Number -> { storeEmail, dmEmail }
+        
+        // Vendor Structure: [ { id: 'v1', name: 'NCR', departments: [ { name: 'Support', email: 'x@x.com', default: true } ] } ]
+        let vendorDirectory = []; 
+        let quickLinks = []; // { name: '', url: '' }
+
+        let emailTemplates = [
+            { id: 'tpl_welcome', name: 'Ticket Received', increment: false, ccDM: true, subject: 'NCR Ticket {ticket} - {issue}', body: 'Team,\n\nI have received your request regarding ticket {ticket}. I am checking the logs for your site ({site}) and will call shortly.\n\nThanks,\nWendy\'s IT Technician' },
+            { id: 'tpl_followup', name: 'Follow Up', increment: true, ccDM: true, subject: 'NCR Ticket {ticket} - Follow Up', body: 'Team,\n\nI attempted to call site {site} to troubleshoot ticket {ticket} but was unable to reach anyone. Please let me know a good time to call back.\n\nThanks,\nWendy\'s IT Technician' },
+            { id: 'tpl_closed', name: 'Ticket Closed', increment: false, ccDM: true, subject: 'NCR Ticket {ticket} - Resolved', body: 'Team,\n\nTicket {ticket} for site {site} has been resolved. Please test and let me know if you need anything else.\n\nThanks,\nWendy\'s IT Technician' }
+        ];
+        let defaultCC = 'mbisbee@wenspok.com';
         let user = null;
+        let currentEditingVendor = null;
 
         const initAuth = async () => {
             try {
@@ -434,21 +638,43 @@
                 workLogs = snapshot.docs.map(d => ({ ...d.data(), fireId: d.id }))
                     .sort((a, b) => b.id - a.id);
                 renderLogs();
-            }, (err) => {
-                console.error("Logs error:", err);
-                if (err.code === 'permission-denied') {
-                    showLoaderError("Database Denied: Update Firestore Rules.");
-                }
-            });
+            }, (err) => handleError(err));
 
             onSnapshot(ticketsRef, (snapshot) => {
                 importedTickets = snapshot.docs.map(d => ({ ...d.data(), fireId: d.id }));
                 renderImportedTickets();
-            }, (err) => {
-                console.error("Tickets sync error:", err);
-                showToast("Ticket Manager: Sync Error (" + err.code + ")");
+            }, (err) => handleError(err));
+
+            onSnapshot(settingsRef, (snapshot) => {
+                snapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    if (doc.id === 'siteDirectory') {
+                        siteDirectory = data.sites || {};
+                        updateSiteCount();
+                    } else if (doc.id === 'config') {
+                        if (data.defaultCC) defaultCC = data.defaultCC;
+                        if (data.templates) emailTemplates = data.templates;
+                        if (data.vendorDirectory) {
+                            vendorDirectory = Array.isArray(data.vendorDirectory) ? data.vendorDirectory : [];
+                        }
+                        if (data.quickLinks) quickLinks = Array.isArray(data.quickLinks) ? data.quickLinks : [];
+                        
+                        renderTemplates();
+                        renderVendors();
+                        renderQuickLinks();
+                        renderQuickLinkSettings();
+                        document.getElementById('default-cc').value = defaultCC;
+                    }
+                });
             });
         };
+
+        function handleError(err) {
+            console.error("Sync error:", err);
+            if (err.code === 'permission-denied') {
+                showLoaderError("Database Denied: Update Firestore Rules.");
+            }
+        }
 
         function showLoaderError(msg) {
             const errEl = document.getElementById('loader-error');
@@ -456,6 +682,444 @@
             document.getElementById('auth-retry-btn').classList.remove('hidden');
             document.getElementById('loader').classList.remove('hidden');
         }
+
+        // --- Settings / Control Panel Logic ---
+        function updateSiteCount() {
+            const count = Object.keys(siteDirectory).length;
+            document.getElementById('site-count-badge').innerText = `${count} Sites Loaded`;
+        }
+
+        window.loadServerDirectory = async () => {
+            try {
+                const response = await fetch('./Emails DM Sites CSV.csv');
+                if (!response.ok) throw new Error("File not found");
+                const text = await response.text();
+                processDirectoryCSV(text);
+            } catch (err) {
+                console.error(err);
+                showToast("Server Load Failed: Check file location.");
+            }
+        };
+
+        window.importSiteDirectory = async (event) => {
+            if (!user) return;
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                processDirectoryCSV(e.target.result);
+            };
+            reader.readAsText(file);
+        };
+
+        async function processDirectoryCSV(text) {
+            const rows = text.split(/\r?\n/).slice(1); // Skip header
+            const newDirectory = {};
+            
+            rows.filter(r => r.trim()).forEach(row => {
+                // CSV: Site,Store,Market,District,Store_Email,DM_Email,DAO_Email
+                const cols = row.split(',').map(c => c.trim());
+                if (cols[0]) {
+                    newDirectory[cols[0]] = {
+                        storeEmail: cols[4] || '',
+                        dmEmail: cols[5] || ''
+                    };
+                }
+            });
+
+            await setDoc(doc(settingsRef, 'siteDirectory'), { sites: newDirectory });
+            showToast(`Directory Updated: ${Object.keys(newDirectory).length} sites.`);
+        }
+
+        window.renderTemplates = () => {
+            const list = document.getElementById('template-list');
+            list.innerHTML = emailTemplates.map((tpl, index) => `
+                <div class="border p-3 rounded bg-white hover:shadow-sm flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-gray-700">${tpl.name}</div>
+                        <div class="text-[10px] text-gray-400 font-mono">${tpl.subject.substring(0, 30)}...</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openTemplateEditor(${index})" class="text-blue-500 text-xs font-bold hover:underline bg-blue-50 px-2 py-1 rounded">Edit</button>
+                        <button onclick="deleteTemplate(${index})" class="text-red-500 text-xs hover:underline bg-red-50 px-2 py-1 rounded">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        // --- Vendor Directory Logic (Advanced) ---
+        window.renderVendors = () => {
+            const list = document.getElementById('vendor-list');
+            if(vendorDirectory.length === 0) {
+                list.innerHTML = `<p class="text-gray-400 text-xs italic text-center">No vendors defined.</p>`;
+                return;
+            }
+            list.innerHTML = vendorDirectory.map((v, idx) => {
+                const deptCount = v.departments ? v.departments.length : 0;
+                const hasEmails = deptCount > 0;
+                const badge = hasEmails 
+                    ? `<span class="bg-gray-100 text-gray-600 text-[10px] px-2 rounded-full">${deptCount} Depts</span>` 
+                    : `<span class="bg-red-100 text-red-600 text-[10px] px-2 rounded-full font-bold">No Emails</span>`;
+                
+                return `
+                <div class="flex justify-between items-center text-xs p-2 border-b last:border-0 bg-white">
+                    <span class="font-bold text-gray-800">${v.name} ${badge}</span>
+                    <div class="flex gap-2">
+                        <button onclick="openVendorEditor(${idx})" class="text-blue-600 hover:underline font-bold">Edit</button>
+                        <button onclick="deleteVendor(${idx})" class="text-red-500 hover:underline">&times;</button>
+                    </div>
+                </div>
+            `}).join('');
+        };
+
+        window.openVendorEditor = (idx = null) => {
+            const isNew = idx === null;
+            const vendor = isNew 
+                ? { id: 'v_' + Date.now(), name: '', departments: [] } 
+                : JSON.parse(JSON.stringify(vendorDirectory[idx])); // Deep copy
+            
+            currentEditingVendor = { ...vendor, index: idx };
+            
+            document.getElementById('edit-vendor-id').value = isNew ? 'new' : idx;
+            document.getElementById('edit-vendor-name').value = vendor.name;
+            renderVendorDepts();
+            
+            document.getElementById('vendor-editor-modal').classList.remove('hidden');
+        };
+
+        window.closeVendorEditor = () => {
+            document.getElementById('vendor-editor-modal').classList.add('hidden');
+            currentEditingVendor = null;
+        }
+
+        window.renderVendorDepts = () => {
+            const list = document.getElementById('edit-vendor-depts');
+            const depts = currentEditingVendor.departments;
+            if(depts.length === 0) {
+                list.innerHTML = `<p class="text-xs text-red-400 italic">No departments added yet.</p>`;
+                return;
+            }
+            list.innerHTML = depts.map((d, i) => `
+                <div class="flex items-center gap-2 text-xs border p-1 rounded bg-gray-50">
+                    <div class="flex-1 font-bold">${d.name} <span class="font-normal text-gray-500"><${d.email}></span></div>
+                    <label class="flex items-center gap-1 cursor-pointer">
+                        <input type="radio" name="dept_default" ${d.default ? 'checked' : ''} onchange="setVendorDefault(${i})">
+                        <span class="text-[10px]">Default</span>
+                    </label>
+                    <button onclick="removeVendorDept(${i})" class="text-red-500 font-bold px-2">&times;</button>
+                </div>
+            `).join('');
+        };
+
+        window.addVendorDeptRow = () => {
+            const name = document.getElementById('new-dept-name').value.trim();
+            const email = document.getElementById('new-dept-email').value.trim();
+            if(!name || !email) return alert("Name and Email required");
+            
+            const isFirst = currentEditingVendor.departments.length === 0;
+            currentEditingVendor.departments.push({ name, email, default: isFirst });
+            
+            document.getElementById('new-dept-name').value = '';
+            document.getElementById('new-dept-email').value = '';
+            renderVendorDepts();
+        };
+
+        window.removeVendorDept = (i) => {
+            currentEditingVendor.departments.splice(i, 1);
+            // If we deleted the default, set first as default
+            if(currentEditingVendor.departments.length > 0 && !currentEditingVendor.departments.some(d => d.default)) {
+                currentEditingVendor.departments[0].default = true;
+            }
+            renderVendorDepts();
+        };
+
+        window.setVendorDefault = (i) => {
+            currentEditingVendor.departments.forEach((d, idx) => d.default = (idx === i));
+            renderVendorDepts();
+        };
+
+        window.saveVendorChanges = async () => {
+            const name = document.getElementById('edit-vendor-name').value.trim();
+            if(!name) return alert("Vendor Name required");
+            
+            currentEditingVendor.name = name;
+            
+            // Clean up temporary index
+            const idx = currentEditingVendor.index;
+            delete currentEditingVendor.index;
+
+            if (idx === null || idx === 'new') {
+                vendorDirectory.push(currentEditingVendor);
+            } else {
+                vendorDirectory[idx] = currentEditingVendor;
+            }
+            
+            // Sort by name
+            vendorDirectory.sort((a,b) => a.name.localeCompare(b.name));
+            
+            await saveSettings(); // Persist to cloud
+            closeVendorEditor();
+            renderVendors();
+        };
+
+        window.deleteVendor = async (idx) => {
+            if(confirm(`Delete vendor?`)) {
+                vendorDirectory.splice(idx, 1);
+                await saveSettings();
+                renderVendors();
+            }
+        };
+
+        // --- Quick Links Logic ---
+        window.renderQuickLinks = () => {
+            const list = document.getElementById('quick-links-list');
+            if (quickLinks.length === 0) {
+                list.innerHTML = `<p class="text-gray-400 italic text-xs">No links added.</p>`;
+                return;
+            }
+            list.innerHTML = quickLinks.map(link => `
+                <a href="${link.url}" target="_blank" class="block py-1 px-2 hover:bg-gray-100 rounded text-blue-600 hover:underline truncate">
+                    🔗 ${link.name}
+                </a>
+            `).join('');
+        };
+
+        window.renderQuickLinkSettings = () => {
+            const list = document.getElementById('quick-links-editor');
+            if (quickLinks.length === 0) {
+                list.innerHTML = `<p class="text-gray-400 italic text-xs text-center">No links to edit.</p>`;
+                return;
+            }
+            list.innerHTML = quickLinks.map((link, idx) => `
+                <div class="flex gap-2 items-center mb-1 pb-1 border-b last:border-0">
+                    <input type="text" value="${link.name}" onchange="updateQuickLink(${idx}, 'name', this.value)" class="input-field mb-0 text-xs w-1/3">
+                    <input type="text" value="${link.url}" onchange="updateQuickLink(${idx}, 'url', this.value)" class="input-field mb-0 text-xs w-1/2">
+                    <button onclick="deleteQuickLink(${idx})" class="text-red-500 font-bold px-2">&times;</button>
+                </div>
+            `).join('');
+        };
+
+        window.addQuickLink = () => {
+            const name = document.getElementById('new-link-name').value.trim();
+            const url = document.getElementById('new-link-url').value.trim();
+            if (!name || !url) return alert("Name and URL required");
+            
+            quickLinks.push({ name, url });
+            document.getElementById('new-link-name').value = '';
+            document.getElementById('new-link-url').value = '';
+            
+            // Re-render local state immediately
+            renderQuickLinks();
+            renderQuickLinkSettings();
+        };
+
+        window.updateQuickLink = (idx, field, value) => {
+            quickLinks[idx][field] = value;
+            renderQuickLinks(); // update sidebar live
+        };
+
+        window.deleteQuickLink = (idx) => {
+            if(confirm("Delete link?")) {
+                quickLinks.splice(idx, 1);
+                renderQuickLinks();
+                renderQuickLinkSettings();
+            }
+        };
+
+        // --- Template Editor Logic ---
+        window.openTemplateEditor = (index = null) => {
+            const isNew = index === null;
+            const tpl = isNew ? { id: 'tpl_' + Date.now(), name: '', subject: 'NCR Ticket {ticket} - {issue}', body: 'Body...', increment: false, ccDM: true } : emailTemplates[index];
+            
+            document.getElementById('edit-tpl-id').value = isNew ? 'new' : index;
+            document.getElementById('edit-tpl-name').value = tpl.name;
+            document.getElementById('edit-tpl-subject').value = tpl.subject;
+            document.getElementById('edit-tpl-body').value = tpl.body;
+            document.getElementById('edit-tpl-increment').checked = tpl.increment;
+            document.getElementById('edit-tpl-ccdm').checked = tpl.ccDM !== false;
+
+            document.getElementById('template-editor-modal').classList.remove('hidden');
+        };
+
+        window.closeTemplateEditor = () => document.getElementById('template-editor-modal').classList.add('hidden');
+
+        window.saveTemplateChanges = () => {
+            const index = document.getElementById('edit-tpl-id').value;
+            const newTpl = {
+                id: index === 'new' ? 'tpl_' + Date.now() : emailTemplates[index].id,
+                name: document.getElementById('edit-tpl-name').value,
+                subject: document.getElementById('edit-tpl-subject').value,
+                body: document.getElementById('edit-tpl-body').value,
+                increment: document.getElementById('edit-tpl-increment').checked,
+                ccDM: document.getElementById('edit-tpl-ccdm').checked
+            };
+
+            if (index === 'new') {
+                emailTemplates.push(newTpl);
+            } else {
+                emailTemplates[index] = newTpl;
+            }
+            
+            renderTemplates();
+            closeTemplateEditor();
+        };
+
+        window.addTemplate = () => openTemplateEditor(); 
+
+        window.deleteTemplate = (idx) => {
+            if(confirm('Delete template?')) {
+                emailTemplates.splice(idx, 1);
+                renderTemplates();
+            }
+        };
+
+        window.saveSettings = async () => {
+            if (!user) return;
+            defaultCC = document.getElementById('default-cc').value;
+            await setDoc(doc(settingsRef, 'config'), {
+                defaultCC: defaultCC,
+                templates: emailTemplates,
+                vendorDirectory: vendorDirectory,
+                quickLinks: quickLinks
+            });
+            showToast("Configuration Saved!");
+        };
+
+        // --- Email Logic ---
+        window.openEmailModal = (ticketId, mode) => {
+            document.getElementById('email-ticket-id').value = ticketId;
+            document.getElementById('email-mode-val').value = mode;
+            const modeDisplay = document.getElementById('email-mode-display');
+            const deptContainer = document.getElementById('email-vendor-dept-container');
+            const deptSelect = document.getElementById('email-vendor-dept');
+            
+            if(mode === 'vendor') {
+                modeDisplay.innerText = "Drafting Email for VENDOR";
+                modeDisplay.className = "mb-2 font-bold uppercase text-xs tracking-wide text-purple-600";
+                
+                const ticket = importedTickets.find(t => t.id === ticketId);
+                const vendorData = vendorDirectory.find(v => v.name === ticket.vendor);
+                
+                if (vendorData && vendorData.departments && vendorData.departments.length > 0) {
+                    deptContainer.classList.remove('hidden');
+                    deptSelect.innerHTML = vendorData.departments.map(d => 
+                        `<option value="${d.email}" ${d.default ? 'selected' : ''}>${d.name} (${d.email})</option>`
+                    ).join('');
+                } else {
+                    deptContainer.classList.add('hidden');
+                }
+
+            } else {
+                modeDisplay.innerText = "Drafting Email for SITE";
+                modeDisplay.className = "mb-4 font-bold uppercase text-xs tracking-wide text-blue-600";
+                deptContainer.classList.add('hidden');
+            }
+
+            const container = document.getElementById('email-template-options');
+            container.innerHTML = emailTemplates.map(tpl => `
+                <button onclick="launchEmail('${tpl.id}')" class="w-full text-left p-3 border rounded hover:bg-gray-100 flex justify-between items-center group">
+                    <div>
+                        <span class="font-bold text-gray-700 block">${tpl.name}</span>
+                        <div class="flex gap-1 mt-1">
+                            ${tpl.increment ? '<span class="text-[10px] text-green-600 bg-green-50 px-1 rounded border border-green-100">+ Attempts</span>' : ''}
+                            ${tpl.ccDM !== false ? '<span class="text-[10px] text-purple-600 bg-purple-50 px-1 rounded border border-purple-100">+ CC DM</span>' : ''}
+                        </div>
+                    </div>
+                    <span class="text-xs text-blue-500 group-hover:underline">Select &rarr;</span>
+                </button>
+            `).join('');
+            document.getElementById('email-modal').classList.remove('hidden');
+        };
+
+        window.closeEmailModal = () => document.getElementById('email-modal').classList.add('hidden');
+
+        window.launchEmail = (tplId) => {
+            const ticketId = document.getElementById('email-ticket-id').value;
+            const mode = document.getElementById('email-mode-val').value;
+            const ticket = importedTickets.find(t => t.id === ticketId);
+            const tpl = emailTemplates.find(t => t.id === tplId);
+            
+            if (!ticket || !tpl) return;
+
+            if (tpl.increment) {
+                changeAttempt(ticket.id, 1);
+            }
+
+            // --- Vendor Email Count Update ---
+            if (mode === 'vendor') {
+                incrementVendorCount(ticket.id);
+            }
+
+            // Site Lookup
+            const siteInfo = siteDirectory[ticket.site] || { storeEmail: '', dmEmail: '' };
+            let to = '';
+            let ccList = defaultCC.split(',').map(e => e.trim()).filter(e => e);
+
+            // LOGIC SPLIT: Vendor vs Site
+            if (mode === 'vendor') {
+                const deptSelect = document.getElementById('email-vendor-dept');
+                const selectedEmail = deptSelect.value;
+                
+                // If a specific dept was selected in the dropdown, use it.
+                // Otherwise fall back to trying to find a default in the directory if the dropdown wasn't shown
+                if (selectedEmail) {
+                    to = selectedEmail;
+                } else {
+                    // Fallback for cases where maybe ticket vendor isn't in directory
+                    to = ''; 
+                    alert(`Vendor '${ticket.vendor}' email not found. Please add to Directory.`);
+                }
+                
+                // Add Site & DM to CC for vendor emails
+                if (siteInfo.storeEmail) ccList.unshift(siteInfo.storeEmail);
+                if (siteInfo.dmEmail) ccList.unshift(siteInfo.dmEmail);
+
+            } else {
+                // Normal Site Email
+                to = siteInfo.storeEmail;
+                // Add DM if template requests it
+                if (tpl.ccDM !== false && siteInfo.dmEmail) {
+                    ccList.unshift(siteInfo.dmEmail);
+                }
+            }
+
+            const cc = [...new Set(ccList)].join(','); // Dedup emails
+
+            // Calculate Lifespan
+            const start = new Date(ticket.date);
+            const now = new Date();
+            const diffTime = Math.abs(now - start);
+            const lifespan = isNaN(diffTime) ? '0' : Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            // Replacement
+            const subject = encodeURIComponent(tpl.subject
+                .replace(/{ticket}/g, ticket.id)
+                .replace(/{site}/g, ticket.site)
+                .replace(/{issue}/g, ticket.issue || 'Issue')
+                .replace(/{created}/g, ticket.date)
+                .replace(/{lifespan}/g, lifespan));
+                
+            const body = encodeURIComponent(tpl.body
+                .replace(/{ticket}/g, ticket.id)
+                .replace(/{site}/g, ticket.site)
+                .replace(/{issue}/g, ticket.issue || 'Issue')
+                .replace(/{created}/g, ticket.date)
+                .replace(/{lifespan}/g, lifespan));
+
+            const mailto = `mailto:${to}?cc=${cc}&subject=${subject}&body=${body}`;
+            window.location.href = mailto;
+            
+            closeEmailModal();
+        };
+
+        window.incrementVendorCount = async (id) => {
+            if (!user) return;
+            const t = importedTickets.find(x => x.id === id);
+            const newCount = (t.vendorEmailCount || 0) + 1;
+            const safeId = id.replace(/[\/\.\#\$\s]/g, '-');
+            await setDoc(doc(ticketsRef, safeId), { ...t, vendorEmailCount: newCount }, { merge: true });
+        };
 
         // --- Log Logic ---
         window.handleActivityTypeChange = () => {
@@ -573,7 +1237,8 @@
                             attempts: isFullExport ? parseInt(cols[7] || 0) : 0,
                             siteResponded: isFullExport ? (cols[8] === 'true') : false,
                             turn: isFullExport ? (cols[9] || 'Other') : 'Other',
-                            closedAt: isFullExport ? (cols[10] || null) : null
+                            closedAt: isFullExport ? (cols[10] || null) : null,
+                            vendorEmailCount: isFullExport ? parseInt(cols[11] || 0) : 0
                         };
                         batch.set(doc(ticketsRef, safeId), tData);
                     });
@@ -714,15 +1379,12 @@
         window.renderImportedTickets = () => {
             const list = document.getElementById('imported-ticket-list');
 
-            // --- Stats Logic ---
             const allTickets = importedTickets;
             const openTickets = allTickets.filter(t => (t.status || '').toLowerCase() !== 'closed');
             const closedTickets = allTickets.filter(t => (t.status || '').toLowerCase() === 'closed');
             
             document.getElementById('stat-total-open').innerText = openTickets.length;
             document.getElementById('stat-total-closed').innerText = closedTickets.length;
-            
-            // Grand Total at bottom now reflects only CURRENT OPEN tickets
             document.getElementById('stat-total-all').innerText = openTickets.length;
             
             const closureRate = allTickets.length ? ((closedTickets.length / allTickets.length) * 100).toFixed(1) : 0;
@@ -733,7 +1395,6 @@
                 const totalDiff = closedWithTime.reduce((acc, t) => {
                     const start = new Date(t.date);
                     const end = new Date(t.closedAt);
-                    // Ensure valid dates before adding to accumulator
                     const diff = end - start;
                     return (isNaN(start.getTime()) || isNaN(end.getTime()) || diff < 0) ? acc : acc + diff;
                 }, 0);
@@ -784,6 +1445,7 @@
                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${t.status === 'closed' ? 'status-badge-closed' : 'status-badge-pending'}">${(t.status || 'PENDING').toUpperCase()}</span>
                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${getTurnClass(t.turn)}">TURN: ${(t.turn || 'OTHER').toUpperCase()}</span>
                                 ${t.siteResponded ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-800">SITE RESPONDED</span>' : ''}
+                                ${t.vendorEmailCount > 0 ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">Vendor Emailed: ${t.vendorEmailCount} times</span>` : ''}
                                 <span class="text-[10px] font-mono text-gray-400">${t.date}</span>
                             </div>
                             <h4 class="font-bold text-gray-800 flex items-center gap-2">
@@ -803,7 +1465,8 @@
                             </div>
                             <div class="grid grid-cols-2 gap-2">
                                 <button onclick="openNotes('${t.id}')" class="px-2 py-1.5 text-[11px] font-bold border rounded bg-white hover:bg-gray-50">Update</button>
-                                <button onclick="followUpTicket('${t.id}')" class="px-2 py-1.5 text-[11px] font-bold bg-wendys-blue text-white rounded">Email</button>
+                                <button onclick="openEmailModal('${t.id}', 'site')" class="px-2 py-1.5 text-[11px] font-bold bg-wendys-blue text-white rounded">Email Site</button>
+                                <button onclick="openEmailModal('${t.id}', 'vendor')" class="px-2 py-1.5 text-[11px] font-bold bg-purple-600 text-white rounded col-span-2">Email Vendor</button>
                             </div>
                             <button onclick="toggleTicketStatus('${t.id}')" class="w-full py-1.5 text-[11px] font-bold rounded ${t.status === 'closed' ? 'bg-gray-300' : 'bg-green-600 text-white'}">
                                 ${t.status === 'closed' ? 'Re-open Ticket' : 'Mark Resolved'}
@@ -827,9 +1490,9 @@
         // --- Shared Helpers ---
         window.exportTicketsCSV = () => {
             if (importedTickets.length === 0) return showToast("Nothing to export");
-            let csv = "Ticket#,Site,Issue,Date,Vendor,Notes,Status,Attempts,SiteResponded,WhoseTurn,ClosedAt\n";
+            let csv = "Ticket#,Site,Issue,Date,Vendor,Notes,Status,Attempts,SiteResponded,WhoseTurn,ClosedAt,VendorEmailCount\n";
             importedTickets.forEach(t => {
-                csv += `"${t.id}","${t.site}","${(t.issue || '').replace(/"/g, '""')}","${t.date}","${(t.vendor || 'N/A').replace(/"/g, '""')}","${(t.notes || '').replace(/"/g, '""')}","${t.status}","${t.attempts}","${t.siteResponded}","${t.turn}","${t.closedAt || ''}"\n`;
+                csv += `"${t.id}","${t.site}","${(t.issue || '').replace(/"/g, '""')}","${t.date}","${(t.vendor || 'N/A').replace(/"/g, '""')}","${(t.notes || '').replace(/"/g, '""')}","${t.status}","${t.attempts}","${t.siteResponded}","${t.turn}","${t.closedAt || ''}","${t.vendorEmailCount || 0}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
@@ -842,8 +1505,11 @@
         window.switchTab = (tab) => {
             document.getElementById('content-log').classList.toggle('hidden', tab !== 'log');
             document.getElementById('content-manager').classList.toggle('hidden', tab !== 'manager');
+            document.getElementById('content-settings').classList.toggle('hidden', tab !== 'settings');
+            
             document.getElementById('tab-log').classList.toggle('active', tab === 'log');
             document.getElementById('tab-manager').classList.toggle('active', tab === 'manager');
+            document.getElementById('tab-settings').classList.toggle('active', tab === 'settings');
         };
 
         window.toggleSiteRequirement = () => {
@@ -915,13 +1581,6 @@
             if (type === 'followup') t = "Team,\n\nI attempted to call the site to troubleshoot the earlier request but was unable to reach anyone. Please let me know a good time to call back.\n\nThanks,\nWendy's IT Technician";
             if (type === 'closed') t = "Team,\n\nThis request has been resolved. Please test the register and let me know if you need anything else.\n\nThanks,\nWendy's IT Technician";
             copyToClipboard(t, "Template copied!");
-        };
-
-        window.followUpTicket = (id) => {
-            const t = importedTickets.find(x => x.id === id);
-            if (!t) return;
-            const template = `Team,\n\nI am following up on ticket #${t.id} regarding: ${t.issue}.\n\nPlease let me know if this has been resolved or if further troubleshooting is required.\n\nThanks,\nWendy's IT Technician`;
-            copyToClipboard(template, "Follow-up email copied!");
         };
 
         window.generateRecap = () => {
